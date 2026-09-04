@@ -1,1 +1,8 @@
 .worktrees/
+dashboard/node_modules/
+dashboard/dist/
+server/db.sqlite3
+server/private/
+__pycache__/
+*.pdf
+*.xls
