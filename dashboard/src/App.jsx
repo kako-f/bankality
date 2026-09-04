@@ -1,122 +1,49 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
+import { importFiles, loadMovements } from './api.js'
+
+const pesos = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [section, setSection] = useState('dashboard')
+  const [movements, setMovements] = useState([])
+  const [files, setFiles] = useState([])
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(true)
 
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+  async function refresh() {
+    setLoading(true)
+    try { setMovements(await loadMovements()); setMessage('') } catch (error) { setMessage(error.message) } finally { setLoading(false) }
+  }
 
-      <div className="ticks"></div>
+  useEffect(() => {
+    loadMovements().then(setMovements).catch((error) => setMessage(error.message)).finally(() => setLoading(false))
+  }, [])
+  const totals = useMemo(() => movements.reduce((result, item) => ({
+    credits: result.credits + Math.max(item.amount, 0), debits: result.debits - Math.min(item.amount, 0),
+  }), { credits: 0, debits: 0 }), [movements])
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+  async function submit(event) {
+    event.preventDefault()
+    if (!files.length) return
+    setLoading(true)
+    try {
+      const result = await importFiles(files)
+      setMessage(result.files.map((file) => file.error || `${file.name}: ${file.imported} importados, ${file.skipped} omitidos`).join(' · '))
+      setFiles([])
+      await refresh()
+    } catch (error) { setMessage(error.message); setLoading(false) }
+  }
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+  return <main>
+    <header><p>Bankality · local</p><h1>Movimientos bancarios</h1></header>
+    <nav aria-label="Secciones"><button className={section === 'dashboard' ? 'active' : ''} onClick={() => setSection('dashboard')}>Dashboard</button><button className={section === 'import' ? 'active' : ''} onClick={() => setSection('import')}>Importar</button></nav>
+    {message && <p className="notice">{message}</p>}
+    {section === 'dashboard' ? <section>
+      <div className="cards"><article><span>Saldo final</span><strong>{pesos.format(movements.at(-1)?.balance || 0)}</strong></article><article><span>Abonos</span><strong>{pesos.format(totals.credits)}</strong></article><article><span>Cargos</span><strong>{pesos.format(totals.debits)}</strong></article></div>
+      <h2>Movimientos</h2>{loading ? <p>Cargando…</p> : <div className="table"><table><thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Monto</th><th>Saldo</th></tr></thead><tbody>{[...movements].reverse().map((item, index) => <tr key={`${item.date}-${item.balance}-${index}`}><td>{item.date}</td><td>{item.description}</td><td>{item.category}</td><td className={item.amount > 0 ? 'credit' : 'debit'}>{pesos.format(item.amount)}</td><td>{pesos.format(item.balance)}</td></tr>)}</tbody></table></div>}
+    </section> : <section className="import"><h2>Importar cartolas</h2><p>Selecciona archivos BCI en formato PDF o XLS. Se procesan sólo en este equipo.</p><form onSubmit={submit}><input type="file" accept=".pdf,.xls" multiple onChange={(event) => setFiles([...event.target.files])} /><button disabled={!files.length || loading}>Importar {files.length ? `(${files.length})` : ''}</button></form></section>}
+  </main>
 }
 
 export default App
