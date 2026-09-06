@@ -37,9 +37,9 @@ function MovementsTable({ movements, categories, editable, onCategoryChange }) {
 
 function Pagination({ page, pages, setPage }) {
   return <div className="pagination" aria-label="Paginación de movimientos">
-    <button type="button" disabled={page === 1} onClick={() => setPage(page - 1)}>Anterior</button>
+    <button type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}>Anterior</button>
     <span>Página {page} de {pages}</span>
-    <button type="button" disabled={page === pages} onClick={() => setPage(page + 1)}>Siguiente</button>
+    <button type="button" disabled={page >= pages} onClick={() => setPage(page + 1)}>Siguiente</button>
   </div>;
 }
 
@@ -60,7 +60,11 @@ function App() {
   const [replacementIds, setReplacementIds] = useState({});
 
   async function refreshCategories() {
-    setCategories(await loadCategories());
+    const nextCategories = await loadCategories();
+    const nextCategoryNames = nextCategories.map((category) => category.name);
+    setCategories(nextCategories);
+    setDashboardFilter((current) => current && !nextCategoryNames.includes(current) ? "" : current);
+    setCategorizeFilter((current) => current && !nextCategoryNames.includes(current) ? "" : current);
     setCategoryEdits({});
     setReplacementIds({});
   }
@@ -141,6 +145,8 @@ function App() {
       setMovements((current) => current.map((movement) => (
         movement.id === updated.id ? { ...movement, category: updated.category } : movement
       )));
+      setDashboardPage(1);
+      setCategorizeMovementsPage(1);
     } catch (error) {
       setMessage(error.message);
     }
