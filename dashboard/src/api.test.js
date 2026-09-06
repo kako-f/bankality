@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as api from './api.js'
+import { filterMovements } from './filters.js'
 
 test('turns a failed import response into an error', async () => {
   const originalFetch = globalThis.fetch
@@ -108,10 +109,15 @@ test('deletes a category with its replacement id and csrf header', async () => {
 })
 
 test('filters movements by the selected category', async () => {
-  const filters = await import('./filters.js').catch(() => ({}))
-  assert.equal(typeof filters.filterMovements, 'function')
+  assert.equal(typeof filterMovements, 'function')
   const rent = { id: 1, category: 'Arriendo' }
   const food = { id: 2, category: 'Comida' }
 
-  assert.deepEqual(filters.filterMovements([rent, food], 'Arriendo'), [rent])
+  assert.deepEqual(filterMovements([rent, food], 'Arriendo'), [rent])
+})
+
+test('filters padded historical categories by their canonical catalog name', async () => {
+  const rent = { id: 1, category: ' \tArriendo\u00a0 ' }
+
+  assert.deepEqual(filterMovements([rent], 'Arriendo'), [rent])
 })

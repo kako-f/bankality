@@ -7,13 +7,13 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .models import Category, Movement
 from .parsers import parse_pdf, parse_xls
-from .services import store_records
+from .services import catalog_name, store_records
 
 
 def json_payload(request):
     try:
         payload = json.loads(request.body)
-    except (json.JSONDecodeError, TypeError):
+    except (json.JSONDecodeError, UnicodeDecodeError, TypeError):
         return None, JsonResponse({'error': 'JSON no reconocido'}, status=400)
     if not isinstance(payload, dict):
         return None, JsonResponse({'error': 'JSON no reconocido'}, status=400)
@@ -21,17 +21,26 @@ def json_payload(request):
 
 
 def category_name(payload):
-    name = str(payload.get('name', '')).strip()
-    if not name or len(name) > 80:
+    try:
+        return catalog_name(payload.get('name')), None
+    except ValueError:
         return None, JsonResponse({'error': 'Nombre de categoría no reconocido'}, status=400)
-    return name, None
+
+
+def movements_in_category(name):
+    # ponytail: scan distinct legacy labels; use a normalized column if the catalog grows large.
+    labels = Movement.objects.order_by().values_list('category', flat=True).distinct()
+    return Movement.objects.filter(category__in=[label for label in labels if label.strip() == name])
 
 
 @ensure_csrf_cookie
 def list_movements(request):
-    return JsonResponse(list(Movement.objects.values(
+    movements = list(Movement.objects.values(
         'id', 'date', 'description', 'amount', 'balance', 'category',
-    )), safe=False)
+    ))
+    for movement in movements:
+        movement['category'] = movement['category'].strip()
+    return JsonResponse(movements, safe=False)
 
 
 def update_category(request, movement_id):
@@ -40,13 +49,18 @@ def update_category(request, movement_id):
     payload, error = json_payload(request)
     if error:
         return error
-    category = payload.get('category')
-    if not isinstance(category, str) or not Category.objects.filter(name=category).exists():
+    try:
+        name = catalog_name(payload.get('category'))
+    except ValueError:
         return JsonResponse({'error': 'Categoría no reconocida'}, status=400)
-    movement = get_object_or_404(Movement, id=movement_id)
-    movement.category = category
-    movement.save(update_fields=['category'])
-    return JsonResponse({'id': movement.id, 'category': movement.category})
+    with transaction.atomic():
+        category = Category.objects.select_for_update().filter(name=name).first()
+        if category is None:
+            return JsonResponse({'error': 'Categoría no reconocida'}, status=400)
+        movement = get_object_or_404(Movement.objects.select_for_update(), id=movement_id)
+        movement.category = category.name
+        movement.save(update_fields=['category'])
+        return JsonResponse({'id': movement.id, 'category': movement.category})
 
 
 def categories(request):
@@ -83,7 +97,7 @@ def category_detail(request, category_id):
                 old_name = category.name
                 category.name = name
                 category.save()
-                Movement.objects.filter(category=old_name).update(category=name)
+                movements_in_category(old_name).update(category=name)
                 return JsonResponse({'id': category.id, 'name': category.name})
             replacement_id = payload.get('replacement_id')
             if type(replacement_id) is not int:
@@ -91,7 +105,7 @@ def category_detail(request, category_id):
             replacement = Category.objects.select_for_update().filter(id=replacement_id).first()
             if replacement is None or replacement.id == category.id:
                 return JsonResponse({'error': 'Categoría de reemplazo no reconocida'}, status=400)
-            Movement.objects.filter(category=category.name).update(category=replacement.name)
+            movements_in_category(category.name).update(category=replacement.name)
             deleted = category.id
             category.delete()
     except IntegrityError:
