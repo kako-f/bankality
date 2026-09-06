@@ -132,3 +132,37 @@ class MovementApiTests(TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertTrue(Category.objects.filter(id=source.id).exists())
+
+    def test_rejects_a_boolean_replacement_category(self):
+        source = Category.objects.create(name='Mascotas')
+        movement = Movement.objects.create(
+            date='2026-09-02', description='Cena', amount=-2000,
+            balance=10, category='Mascotas', fingerprint='boolean-replacement',
+        )
+
+        response = self.client.delete(
+            f'/api/categories/{source.id}', '{"replacement_id": true}',
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(Category.objects.filter(id=source.id).exists())
+        movement.refresh_from_db()
+        self.assertEqual(movement.category, 'Mascotas')
+
+    def test_rejects_a_float_replacement_category(self):
+        source = Category.objects.create(name='Mascotas')
+        movement = Movement.objects.create(
+            date='2026-09-02', description='Cena', amount=-2000,
+            balance=10, category='Mascotas', fingerprint='float-replacement',
+        )
+
+        response = self.client.delete(
+            f'/api/categories/{source.id}', '{"replacement_id": 1.0}',
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertTrue(Category.objects.filter(id=source.id).exists())
+        movement.refresh_from_db()
+        self.assertEqual(movement.category, 'Mascotas')
