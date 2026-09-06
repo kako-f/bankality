@@ -85,10 +85,13 @@ def category_detail(request, category_id):
                 category.save()
                 Movement.objects.filter(category=old_name).update(category=name)
                 return JsonResponse({'id': category.id, 'name': category.name})
-            replacement = get_object_or_404(
-                Category.objects.select_for_update(), id=payload.get('replacement_id'),
-            )
-            if replacement.id == category.id:
+            try:
+                replacement = Category.objects.select_for_update().filter(
+                    id=payload.get('replacement_id'),
+                ).first()
+            except (TypeError, ValueError):
+                replacement = None
+            if replacement is None or replacement.id == category.id:
                 return JsonResponse({'error': 'Categoría de reemplazo no reconocida'}, status=400)
             Movement.objects.filter(category=category.name).update(category=replacement.name)
             deleted = category.id
