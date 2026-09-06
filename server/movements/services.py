@@ -1,6 +1,8 @@
 import hashlib
 
-from .models import Movement
+from django.db import transaction
+
+from .models import Category, Movement
 
 
 def fingerprint(record):
@@ -10,8 +12,10 @@ def fingerprint(record):
 
 def store_records(records):
     imported = skipped = 0
-    for record in records:
-        _, created = Movement.objects.get_or_create(fingerprint=fingerprint(record), defaults=record)
-        imported += created
-        skipped += not created
+    with transaction.atomic():
+        for record in records:
+            Category.objects.get_or_create(name=record['category'])
+            _, created = Movement.objects.get_or_create(fingerprint=fingerprint(record), defaults=record)
+            imported += created
+            skipped += not created
     return imported, skipped

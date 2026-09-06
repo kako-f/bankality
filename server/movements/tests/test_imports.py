@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
-from movements.models import Movement
+from movements.models import Category, Movement
 
 
 RECORD = {
@@ -14,6 +14,13 @@ RECORD = {
 
 
 class ImportTests(TestCase):
+    @patch('movements.views.parse_xls', return_value=[RECORD])
+    def test_creates_catalog_category_from_import(self, _):
+        response = self.client.post('/api/imports', {'files': [SimpleUploadedFile('movements.xls', b'fixture')]})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(Category.objects.filter(name='Compras').exists())
+
     @patch('movements.views.parse_xls', return_value=[RECORD])
     def test_imports_once_then_skips_duplicates(self, _):
         upload = SimpleUploadedFile('movements.xls', b'fixture')
