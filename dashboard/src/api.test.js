@@ -1,11 +1,117 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { importFiles } from './api.js'
+import * as api from './api.js'
 
 test('turns a failed import response into an error', async () => {
   const originalFetch = globalThis.fetch
-  globalThis.fetch = async () => new Response('Formato no reconocido', { status: 400 })
+  const originalDocument = globalThis.document
+  globalThis.document = { cookie: 'csrftoken=local-token' }
+  globalThis.fetch = async (_, options) => {
+    assert.equal(options.headers['X-CSRFToken'], 'local-token')
+    return new Response('Formato no reconocido', { status: 400 })
+  }
 
-  await assert.rejects(importFiles([]), /Formato no reconocido/)
+  await assert.rejects(api.importFiles([]), /Formato no reconocido/)
   globalThis.fetch = originalFetch
+  globalThis.document = originalDocument
+})
+
+test('sends a category choice to its movement', async () => {
+  assert.equal(typeof api.updateCategory, 'function')
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async (url, options) => {
+    assert.equal(url, '/api/movements/7/category')
+    assert.equal(options.method, 'PATCH')
+    assert.deepEqual(options.headers, { 'Content-Type': 'application/json' })
+    assert.equal(options.body, '{"category":"Arriendo"}')
+    return new Response('{"id":7,"category":"Arriendo"}', { headers: { 'Content-Type': 'application/json' } })
+  }
+
+  assert.deepEqual(await api.updateCategory(7, 'Arriendo'), { id: 7, category: 'Arriendo' })
+  globalThis.fetch = originalFetch
+})
+
+test('sends the csrf cookie when updating a category', async () => {
+  const originalFetch = globalThis.fetch
+  const originalDocument = globalThis.document
+  globalThis.document = { cookie: 'csrftoken=local-token' }
+  globalThis.fetch = async (_, options) => {
+    assert.equal(options.headers['X-CSRFToken'], 'local-token')
+    return new Response('{"id":7,"category":"Arriendo"}', { headers: { 'Content-Type': 'application/json' } })
+  }
+
+  await api.updateCategory(7, 'Arriendo')
+  globalThis.fetch = originalFetch
+  globalThis.document = originalDocument
+})
+
+test('loads the category catalog', async () => {
+  const originalFetch = globalThis.fetch
+  globalThis.fetch = async (url) => {
+    assert.equal(url, '/api/categories')
+    return new Response('[{"id":1,"name":"Mascotas"}]', { headers: { 'Content-Type': 'application/json' } })
+  }
+
+  assert.deepEqual(await api.loadCategories(), [{ id: 1, name: 'Mascotas' }])
+  globalThis.fetch = originalFetch
+})
+
+test('creates a category with its name and csrf header', async () => {
+  const originalFetch = globalThis.fetch
+  const originalDocument = globalThis.document
+  globalThis.document = { cookie: 'csrftoken=local-token' }
+  globalThis.fetch = async (url, options) => {
+    assert.equal(url, '/api/categories')
+    assert.equal(options.method, 'POST')
+    assert.deepEqual(options.headers, { 'Content-Type': 'application/json', 'X-CSRFToken': 'local-token' })
+    assert.equal(options.body, '{"name":"Mascotas"}')
+    return new Response('{"id":1,"name":"Mascotas"}', { headers: { 'Content-Type': 'application/json' } })
+  }
+
+  assert.deepEqual(await api.createCategory('Mascotas'), { id: 1, name: 'Mascotas' })
+  globalThis.fetch = originalFetch
+  globalThis.document = originalDocument
+})
+
+test('renames a category with its id, name, and csrf header', async () => {
+  const originalFetch = globalThis.fetch
+  const originalDocument = globalThis.document
+  globalThis.document = { cookie: 'csrftoken=local-token' }
+  globalThis.fetch = async (url, options) => {
+    assert.equal(url, '/api/categories/4')
+    assert.equal(options.method, 'PATCH')
+    assert.deepEqual(options.headers, { 'Content-Type': 'application/json', 'X-CSRFToken': 'local-token' })
+    assert.equal(options.body, '{"name":"Restaurantes"}')
+    return new Response('{"id":4,"name":"Restaurantes"}', { headers: { 'Content-Type': 'application/json' } })
+  }
+
+  assert.deepEqual(await api.renameCategory(4, 'Restaurantes'), { id: 4, name: 'Restaurantes' })
+  globalThis.fetch = originalFetch
+  globalThis.document = originalDocument
+})
+
+test('deletes a category with its replacement id and csrf header', async () => {
+  const originalFetch = globalThis.fetch
+  const originalDocument = globalThis.document
+  globalThis.document = { cookie: 'csrftoken=local-token' }
+  globalThis.fetch = async (url, options) => {
+    assert.equal(url, '/api/categories/4')
+    assert.equal(options.method, 'DELETE')
+    assert.deepEqual(options.headers, { 'Content-Type': 'application/json', 'X-CSRFToken': 'local-token' })
+    assert.equal(options.body, '{"replacement_id":2}')
+    return new Response('{"deleted":true}', { headers: { 'Content-Type': 'application/json' } })
+  }
+
+  assert.deepEqual(await api.deleteCategory(4, 2), { deleted: true })
+  globalThis.fetch = originalFetch
+  globalThis.document = originalDocument
+})
+
+test('filters movements by the selected category', async () => {
+  const filters = await import('./filters.js').catch(() => ({}))
+  assert.equal(typeof filters.filterMovements, 'function')
+  const rent = { id: 1, category: 'Arriendo' }
+  const food = { id: 2, category: 'Comida' }
+
+  assert.deepEqual(filters.filterMovements([rent, food], 'Arriendo'), [rent])
 })
