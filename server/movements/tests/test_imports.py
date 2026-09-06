@@ -5,6 +5,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 
 from movements.models import Category, Movement
+from movements.services import fingerprint, store_records
 
 
 RECORD = {
@@ -14,6 +15,27 @@ RECORD = {
 
 
 class ImportTests(TestCase):
+    def test_normalizes_catalog_category_without_changing_movement_or_fingerprint(self):
+        record = {**RECORD, 'category': '  Compras  '}
+
+        store_records([record])
+
+        movement = Movement.objects.get()
+        self.assertTrue(Category.objects.filter(name='Compras').exists())
+        self.assertFalse(Category.objects.filter(name='  Compras  ').exists())
+        self.assertEqual(movement.category, '  Compras  ')
+        self.assertEqual(movement.fingerprint, fingerprint(record))
+
+    def test_rejects_blank_and_oversized_catalog_categories(self):
+        category_count = Category.objects.count()
+        for category in ('   ', 'x' * 81):
+            with self.subTest(category=category):
+                with self.assertRaises(ValueError):
+                    store_records([{**RECORD, 'category': category}])
+
+        self.assertEqual(Category.objects.count(), category_count)
+        self.assertEqual(Movement.objects.count(), 0)
+
     @patch('movements.views.parse_xls', return_value=[RECORD])
     def test_creates_catalog_category_from_import(self, _):
         response = self.client.post('/api/imports', {'files': [SimpleUploadedFile('movements.xls', b'fixture')]})
