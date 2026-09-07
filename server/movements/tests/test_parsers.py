@@ -19,6 +19,9 @@ class ParserTests(SimpleTestCase):
                 expected = 'Transferencias recibidas' if amount > 0 else 'Transferencias enviadas'
                 self.assertEqual(category(description, amount), expected)
 
+    def test_groups_concesion_aliment_as_cafes_negocio(self):
+        self.assertEqual(category('CONCESION ALIMENT 14973', -1000), 'Cafes/Negocio')
+
     def test_parses_bci_last_movements_rows(self):
         rows = [
             [None, None, None, 'Saldo Contable', '3.505.003', None, None, None],
