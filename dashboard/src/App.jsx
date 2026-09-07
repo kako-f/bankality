@@ -100,19 +100,22 @@ function ExpenseCharts({ movements, categories = [] }) {
   const categoryValues = useMemo(() => categoryTotals.map(({ total }) => total), [categoryTotals]);
   const monthLabels = useMemo(() => monthTotals.map(({ label }) => label), [monthTotals]);
   const monthValues = useMemo(() => monthTotals.map(({ total }) => total), [monthTotals]);
-  const categoryXAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
-  const categoryYAxis = useMemo(() => [{ scaleType: "band", data: categoryLabels }], [categoryLabels]);
+  const categoryXAxis = useMemo(() => [{
+    scaleType: "band",
+    data: categoryLabels,
+    tickLabelStyle: { angle: -35, textAnchor: "end", fontSize: 10 },
+  }], [categoryLabels]);
+  const categoryYAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
   const categorySeries = useMemo(() => [{ data: categoryValues, label: "Gastos", color: "var(--danger)" }], [categoryValues]);
-  const monthXAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
-  const monthYAxis = useMemo(() => [{ scaleType: "band", data: monthLabels }], [monthLabels]);
+  const monthXAxis = useMemo(() => [{ scaleType: "band", data: monthLabels }], [monthLabels]);
+  const monthYAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
   const monthSeries = useMemo(() => [{ data: monthValues, label: "Gastos", color: "var(--accent)", area: true, showMark: true }], [monthValues]);
 
   return <div className="charts" aria-label="Gráficos de gastos">
     <article className="chart-panel">
       <h2>Gastos por categoría</h2>
       {categoryTotals.length ? <BarChart
-        layout="horizontal"
-        height={Math.max(250, categoryTotals.length * 54)}
+        height={300}
         xAxis={categoryXAxis}
         yAxis={categoryYAxis}
         series={categorySeries}
@@ -123,8 +126,7 @@ function ExpenseCharts({ movements, categories = [] }) {
     <article className="chart-panel">
       <h2>Gastos por mes</h2>
       {monthTotals.length ? <BarChart
-        layout="horizontal"
-        height={Math.max(250, monthTotals.length * 50)}
+        height={300}
         xAxis={monthXAxis}
         series={monthSeries}
         yAxis={monthYAxis}
