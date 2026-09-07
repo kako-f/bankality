@@ -219,9 +219,9 @@ test('aggregates incomes and expenses by category', () => {
     { amount: 100000, category: 'Transferencias recibidas' },
     { amount: -400000, category: 'Arriendo' },
   ]), [
-    { label: 'Remuneración', income: 1957159, expenses: 0 },
-    { label: 'Arriendo', income: 0, expenses: 400000 },
-    { label: 'Transferencias recibidas', income: 100000, expenses: 0 },
+    { label: 'Remuneración', total: 1957159 },
+    { label: 'Arriendo', total: -400000 },
+    { label: 'Transferencias recibidas', total: 100000 },
   ])
 })
 

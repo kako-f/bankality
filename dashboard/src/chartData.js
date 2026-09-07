@@ -17,14 +17,11 @@ export function movementsByCategory(movements) {
   const totals = new Map();
   movements.forEach((movement) => {
     const category = movement.category?.trim() || "Sin categoría";
-    const current = totals.get(category) || { income: 0, expenses: 0 };
-    if (movement.amount >= 0) current.income += movement.amount;
-    else current.expenses += Math.abs(movement.amount);
-    totals.set(category, current);
+    totals.set(category, (totals.get(category) || 0) + movement.amount);
   });
   return [...totals.entries()]
-    .map(([label, { income, expenses }]) => ({ label, income, expenses }))
-    .sort((left, right) => Math.max(right.income, right.expenses) - Math.max(left.income, left.expenses) || left.label.localeCompare(right.label));
+    .map(([label, total]) => ({ label, total }))
+    .sort((left, right) => Math.abs(right.total) - Math.abs(left.total) || left.label.localeCompare(right.label));
 }
 
 export function expensesByMonth(movements) {

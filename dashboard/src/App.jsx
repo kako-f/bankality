@@ -87,7 +87,7 @@ function ExpenseCharts({ movements, categories = [] }) {
     const seen = new Set(totals.map(({ label }) => label));
     return [...totals, ...categories
       .filter((category) => !seen.has(category))
-      .map((label) => ({ label, income: 0, expenses: 0 }))];
+      .map((label) => ({ label, total: 0 }))];
   }, [movements, categories]);
   const monthTotals = useMemo(() => movementsByMonth(movements), [movements]);
   const chartSx = useMemo(() => ({
@@ -97,8 +97,7 @@ function ExpenseCharts({ movements, categories = [] }) {
     "& .MuiChartsAxis-line, & .MuiChartsAxis-tick": { stroke: "var(--border)" },
   }), []);
   const categoryLabels = useMemo(() => categoryTotals.map(({ label }) => label), [categoryTotals]);
-  const categoryIncomeValues = useMemo(() => categoryTotals.map(({ income }) => income), [categoryTotals]);
-  const categoryExpenseValues = useMemo(() => categoryTotals.map(({ expenses }) => expenses), [categoryTotals]);
+  const categoryValues = useMemo(() => categoryTotals.map(({ total }) => total), [categoryTotals]);
   const monthLabels = useMemo(() => monthTotals.map(({ label }) => label), [monthTotals]);
   const monthIncomeValues = useMemo(() => monthTotals.map(({ income }) => income), [monthTotals]);
   const monthExpenseValues = useMemo(() => monthTotals.map(({ expenses }) => expenses), [monthTotals]);
@@ -109,10 +108,7 @@ function ExpenseCharts({ movements, categories = [] }) {
     tickLabelStyle: { angle: -45, textAnchor: "end", fontSize: 11 },
   }], [categoryLabels]);
   const categoryYAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
-  const categorySeries = useMemo(() => [
-    { data: categoryIncomeValues, label: "Ingresos", color: "var(--accent)" },
-    { data: categoryExpenseValues, label: "Gastos", color: "var(--danger)" },
-  ], [categoryIncomeValues, categoryExpenseValues]);
+  const categorySeries = useMemo(() => [{ data: categoryValues, label: "Monto", color: "var(--accent)" }], [categoryValues]);
   const monthXAxis = useMemo(() => [{ scaleType: "band", data: monthLabels }], [monthLabels]);
   const monthYAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
   const monthSeries = useMemo(() => [
@@ -132,7 +128,7 @@ function ExpenseCharts({ movements, categories = [] }) {
         sx={chartSx}
       /> : <p className="chart-empty">No hay movimientos para mostrar.</p>}
       {categoryTotals.length > 0 && <div className="category-summary" aria-label="Detalle de movimientos por categoría">
-        {categoryTotals.map(({ label, income, expenses }) => <div key={label}><span>{label}</span><strong>↑ {pesos.format(income)} · ↓ {pesos.format(expenses)}</strong></div>)}
+        {categoryTotals.map(({ label, total }) => <div key={label}><span>{label}</span><strong>{pesos.format(total)}</strong></div>)}
       </div>}
     </article>
     <article className="chart-panel">
