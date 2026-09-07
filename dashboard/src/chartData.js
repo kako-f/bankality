@@ -26,3 +26,21 @@ export function expensesByMonth(movements) {
       total,
     }));
 }
+
+export function movementsByMonth(movements) {
+  const totals = new Map();
+  movements.forEach((movement) => {
+    const month = movement.date.slice(0, 7);
+    const current = totals.get(month) || { income: 0, expenses: 0 };
+    if (movement.amount >= 0) current.income += movement.amount;
+    else current.expenses += Math.abs(movement.amount);
+    totals.set(month, current);
+  });
+  return [...totals.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([month, { income, expenses }]) => ({
+      label: new Intl.DateTimeFormat("es-CL", { month: "short", year: "numeric" }).format(new Date(`${month}-01T00:00:00`)),
+      income,
+      expenses,
+    }));
+}

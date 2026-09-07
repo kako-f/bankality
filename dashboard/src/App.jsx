@@ -12,7 +12,7 @@ import {
   updateCategory,
 } from "./api.js";
 import { filterMovementRows, sortMovementRows } from "./filters.js";
-import { expensesByCategory, expensesByMonth } from "./chartData.js";
+import { expensesByCategory, movementsByMonth } from "./chartData.js";
 import { BarChart } from "@mui/x-charts/BarChart";
 
 const pesos = new Intl.NumberFormat("es-CL", {
@@ -89,7 +89,7 @@ function ExpenseCharts({ movements, categories = [] }) {
       .filter((category) => !seen.has(category))
       .map((label) => ({ label, total: 0 }))];
   }, [movements, categories]);
-  const monthTotals = useMemo(() => expensesByMonth(movements), [movements]);
+  const monthTotals = useMemo(() => movementsByMonth(movements), [movements]);
   const chartSx = useMemo(() => ({
     "& .MuiChartsAxis-tickLabel": { fill: "var(--muted)" },
     "& .MuiChartsAxis-label": { fill: "var(--muted)" },
@@ -99,7 +99,8 @@ function ExpenseCharts({ movements, categories = [] }) {
   const categoryLabels = useMemo(() => categoryTotals.map(({ label }) => label), [categoryTotals]);
   const categoryValues = useMemo(() => categoryTotals.map(({ total }) => total), [categoryTotals]);
   const monthLabels = useMemo(() => monthTotals.map(({ label }) => label), [monthTotals]);
-  const monthValues = useMemo(() => monthTotals.map(({ total }) => total), [monthTotals]);
+  const monthIncomeValues = useMemo(() => monthTotals.map(({ income }) => income), [monthTotals]);
+  const monthExpenseValues = useMemo(() => monthTotals.map(({ expenses }) => expenses), [monthTotals]);
   const categoryXAxis = useMemo(() => [{
     scaleType: "band",
     data: categoryLabels,
@@ -109,7 +110,10 @@ function ExpenseCharts({ movements, categories = [] }) {
   const categorySeries = useMemo(() => [{ data: categoryValues, label: "Gastos", color: "var(--danger)" }], [categoryValues]);
   const monthXAxis = useMemo(() => [{ scaleType: "band", data: monthLabels }], [monthLabels]);
   const monthYAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
-  const monthSeries = useMemo(() => [{ data: monthValues, label: "Gastos", color: "var(--accent)", area: true, showMark: true }], [monthValues]);
+  const monthSeries = useMemo(() => [
+    { data: monthIncomeValues, label: "Ingresos", color: "var(--accent)" },
+    { data: monthExpenseValues, label: "Gastos", color: "var(--danger)" },
+  ], [monthIncomeValues, monthExpenseValues]);
 
   return <div className="charts" aria-label="Gráficos de gastos">
     <article className="chart-panel">
@@ -124,7 +128,7 @@ function ExpenseCharts({ movements, categories = [] }) {
       /> : <p className="chart-empty">No hay gastos para mostrar.</p>}
     </article>
     <article className="chart-panel">
-      <h2>Gastos por mes</h2>
+      <h2>Movimientos por mes</h2>
       {monthTotals.length ? <BarChart
         height={300}
         xAxis={monthXAxis}

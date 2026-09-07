@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as api from './api.js'
-import { expensesByCategory, expensesByMonth } from './chartData.js'
+import { expensesByCategory, expensesByMonth, movementsByMonth } from './chartData.js'
 import { filterMovementRows, filterMovements, sortMovementRows } from './filters.js'
 
 test('turns a failed import response into an error', async () => {
@@ -219,4 +219,15 @@ test('aggregates expenses by month in chronological order', () => {
     { date: '2026-09-30', amount: -3000 },
     { date: '2026-10-01', amount: 1000 },
   ]).map(({ total }) => total), [3000, 2000])
+})
+
+test('aggregates incomes and expenses by month', () => {
+  assert.deepEqual(movementsByMonth([
+    { date: '2026-09-30', amount: -3000 },
+    { date: '2026-09-02', amount: 10000 },
+    { date: '2026-10-01', amount: 5000 },
+  ]).map(({ income, expenses }) => ({ income, expenses })), [
+    { income: 10000, expenses: 3000 },
+    { income: 5000, expenses: 0 },
+  ])
 })
