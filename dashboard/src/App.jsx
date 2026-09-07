@@ -21,8 +21,8 @@ const pesos = new Intl.NumberFormat("es-CL", {
   maximumFractionDigits: 0,
 });
 const PAGE_SIZE = 25;
-const CATEGORY_CHART_MARGIN = Object.freeze({ left: 110, right: 20, top: 20, bottom: 45 });
-const MONTH_CHART_MARGIN = Object.freeze({ left: 105, right: 20, top: 20, bottom: 45 });
+const CATEGORY_CHART_MARGIN = Object.freeze({ left: 75, right: 25, top: 25, bottom: 110 });
+const MONTH_CHART_MARGIN = Object.freeze({ left: 85, right: 25, top: 25, bottom: 65 });
 const EMPTY_TABLE_FILTERS = {
   dateFrom: "",
   dateTo: "",
@@ -104,7 +104,7 @@ function ExpenseCharts({ movements, categories = [] }) {
   const categoryXAxis = useMemo(() => [{
     scaleType: "band",
     data: categoryLabels,
-    tickLabelStyle: { angle: -35, textAnchor: "end", fontSize: 10 },
+    tickLabelStyle: { angle: -45, textAnchor: "end", fontSize: 11 },
   }], [categoryLabels]);
   const categoryYAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
   const categorySeries = useMemo(() => [{ data: categoryValues, label: "Gastos", color: "var(--danger)" }], [categoryValues]);
@@ -119,7 +119,7 @@ function ExpenseCharts({ movements, categories = [] }) {
     <article className="chart-panel">
       <h2>Gastos por categoría</h2>
       {categoryTotals.length ? <BarChart
-        height={300}
+        height={440}
         xAxis={categoryXAxis}
         yAxis={categoryYAxis}
         series={categorySeries}
@@ -130,7 +130,7 @@ function ExpenseCharts({ movements, categories = [] }) {
     <article className="chart-panel">
       <h2>Movimientos por mes</h2>
       {monthTotals.length ? <BarChart
-        height={300}
+        height={360}
         xAxis={monthXAxis}
         series={monthSeries}
         yAxis={monthYAxis}
