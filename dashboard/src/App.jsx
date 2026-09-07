@@ -14,7 +14,6 @@ import {
 import { filterMovementRows, sortMovementRows } from "./filters.js";
 import { expensesByCategory, expensesByMonth } from "./chartData.js";
 import { BarChart } from "@mui/x-charts/BarChart";
-import { LineChart } from "@mui/x-charts/LineChart";
 
 const pesos = new Intl.NumberFormat("es-CL", {
   style: "currency",
@@ -23,7 +22,7 @@ const pesos = new Intl.NumberFormat("es-CL", {
 });
 const PAGE_SIZE = 25;
 const CATEGORY_CHART_MARGIN = Object.freeze({ left: 110, right: 20, top: 20, bottom: 45 });
-const MONTH_CHART_MARGIN = Object.freeze({ left: 75, right: 20, top: 20, bottom: 45 });
+const MONTH_CHART_MARGIN = Object.freeze({ left: 105, right: 20, top: 20, bottom: 45 });
 const EMPTY_TABLE_FILTERS = {
   dateFrom: "",
   dateTo: "",
@@ -82,8 +81,14 @@ function Pagination({ page, pages, setPage }) {
   </div>;
 }
 
-function ExpenseCharts({ movements }) {
-  const categoryTotals = useMemo(() => expensesByCategory(movements), [movements]);
+function ExpenseCharts({ movements, categories = [] }) {
+  const categoryTotals = useMemo(() => {
+    const totals = expensesByCategory(movements);
+    const seen = new Set(totals.map(({ label }) => label));
+    return [...totals, ...categories
+      .filter((category) => !seen.has(category))
+      .map((label) => ({ label, total: 0 }))];
+  }, [movements, categories]);
   const monthTotals = useMemo(() => expensesByMonth(movements), [movements]);
   const chartSx = useMemo(() => ({
     "& .MuiChartsAxis-tickLabel": { fill: "var(--muted)" },
@@ -98,8 +103,8 @@ function ExpenseCharts({ movements }) {
   const categoryXAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
   const categoryYAxis = useMemo(() => [{ scaleType: "band", data: categoryLabels }], [categoryLabels]);
   const categorySeries = useMemo(() => [{ data: categoryValues, label: "Gastos", color: "var(--danger)" }], [categoryValues]);
-  const monthXAxis = useMemo(() => [{ scaleType: "point", data: monthLabels }], [monthLabels]);
-  const monthYAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
+  const monthXAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
+  const monthYAxis = useMemo(() => [{ scaleType: "band", data: monthLabels }], [monthLabels]);
   const monthSeries = useMemo(() => [{ data: monthValues, label: "Gastos", color: "var(--accent)", area: true, showMark: true }], [monthValues]);
 
   return <div className="charts" aria-label="Gráficos de gastos">
@@ -116,9 +121,10 @@ function ExpenseCharts({ movements }) {
       /> : <p className="chart-empty">No hay gastos para mostrar.</p>}
     </article>
     <article className="chart-panel">
-      <h2>Evolución mensual</h2>
-      {monthTotals.length ? <LineChart
-        height={300}
+      <h2>Gastos por mes</h2>
+      {monthTotals.length ? <BarChart
+        layout="horizontal"
+        height={Math.max(250, monthTotals.length * 50)}
         xAxis={monthXAxis}
         series={monthSeries}
         yAxis={monthYAxis}
@@ -208,7 +214,7 @@ function App() {
   );
   const finalBalance = summaryMovements[0]?.balance || 0;
 
-  const categoryNames = categories.map((category) => category.name);
+  const categoryNames = useMemo(() => categories.map((category) => category.name), [categories]);
   const dashboardMovements = useMemo(
     () => sortMovementRows(filterMovementRows(movements, dashboardTableFilters), dashboardSort),
     [movements, dashboardTableFilters, dashboardSort],
@@ -407,7 +413,7 @@ function App() {
               <label>Desde <input type="date" value={analysisDateFilters.dateFrom} onChange={(event) => setAnalysisDateFilters((current) => ({ ...current, dateFrom: event.target.value }))} /></label>
               <label>Hasta <input type="date" value={analysisDateFilters.dateTo} onChange={(event) => setAnalysisDateFilters((current) => ({ ...current, dateTo: event.target.value }))} /></label>
             </div></div>
-            {loading ? <p>Cargando…</p> : <ExpenseCharts movements={analysisMovements} />}
+            {loading ? <p>Cargando…</p> : <ExpenseCharts movements={analysisMovements} categories={categoryNames} />}
           </section>
         ) : section === "categorize" ? (
           <section>
