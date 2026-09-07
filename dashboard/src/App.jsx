@@ -12,7 +12,7 @@ import {
   updateCategory,
 } from "./api.js";
 import { filterMovementRows, sortMovementRows } from "./filters.js";
-import { expensesByCategory, movementsByMonth } from "./chartData.js";
+import { movementsByCategory, movementsByMonth } from "./chartData.js";
 import { BarChart } from "@mui/x-charts/BarChart";
 
 const pesos = new Intl.NumberFormat("es-CL", {
@@ -83,11 +83,11 @@ function Pagination({ page, pages, setPage }) {
 
 function ExpenseCharts({ movements, categories = [] }) {
   const categoryTotals = useMemo(() => {
-    const totals = expensesByCategory(movements);
+    const totals = movementsByCategory(movements);
     const seen = new Set(totals.map(({ label }) => label));
     return [...totals, ...categories
       .filter((category) => !seen.has(category))
-      .map((label) => ({ label, total: 0 }))];
+      .map((label) => ({ label, income: 0, expenses: 0 }))];
   }, [movements, categories]);
   const monthTotals = useMemo(() => movementsByMonth(movements), [movements]);
   const chartSx = useMemo(() => ({
@@ -97,7 +97,8 @@ function ExpenseCharts({ movements, categories = [] }) {
     "& .MuiChartsAxis-line, & .MuiChartsAxis-tick": { stroke: "var(--border)" },
   }), []);
   const categoryLabels = useMemo(() => categoryTotals.map(({ label }) => label), [categoryTotals]);
-  const categoryValues = useMemo(() => categoryTotals.map(({ total }) => total), [categoryTotals]);
+  const categoryIncomeValues = useMemo(() => categoryTotals.map(({ income }) => income), [categoryTotals]);
+  const categoryExpenseValues = useMemo(() => categoryTotals.map(({ expenses }) => expenses), [categoryTotals]);
   const monthLabels = useMemo(() => monthTotals.map(({ label }) => label), [monthTotals]);
   const monthIncomeValues = useMemo(() => monthTotals.map(({ income }) => income), [monthTotals]);
   const monthExpenseValues = useMemo(() => monthTotals.map(({ expenses }) => expenses), [monthTotals]);
@@ -108,7 +109,10 @@ function ExpenseCharts({ movements, categories = [] }) {
     tickLabelStyle: { angle: -45, textAnchor: "end", fontSize: 11 },
   }], [categoryLabels]);
   const categoryYAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
-  const categorySeries = useMemo(() => [{ data: categoryValues, label: "Gastos", color: "var(--danger)" }], [categoryValues]);
+  const categorySeries = useMemo(() => [
+    { data: categoryIncomeValues, label: "Ingresos", color: "var(--accent)" },
+    { data: categoryExpenseValues, label: "Gastos", color: "var(--danger)" },
+  ], [categoryIncomeValues, categoryExpenseValues]);
   const monthXAxis = useMemo(() => [{ scaleType: "band", data: monthLabels }], [monthLabels]);
   const monthYAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
   const monthSeries = useMemo(() => [
@@ -116,9 +120,9 @@ function ExpenseCharts({ movements, categories = [] }) {
     { data: monthExpenseValues, label: "Gastos", color: "var(--danger)" },
   ], [monthIncomeValues, monthExpenseValues]);
 
-  return <div className="charts" aria-label="Gráficos de gastos">
+  return <div className="charts" aria-label="Gráficos de movimientos">
     <article className="chart-panel">
-      <h2>Gastos por categoría</h2>
+      <h2>Movimientos por categoría</h2>
       {categoryTotals.length ? <BarChart
         height={440}
         xAxis={categoryXAxis}
@@ -126,9 +130,9 @@ function ExpenseCharts({ movements, categories = [] }) {
         series={categorySeries}
         margin={CATEGORY_CHART_MARGIN}
         sx={chartSx}
-      /> : <p className="chart-empty">No hay gastos para mostrar.</p>}
-      {categoryTotals.length > 0 && <div className="category-summary" aria-label="Detalle de gastos por categoría">
-        {categoryTotals.map(({ label, total }) => <div key={label}><span>{label}</span><strong>{pesos.format(total)}</strong></div>)}
+      /> : <p className="chart-empty">No hay movimientos para mostrar.</p>}
+      {categoryTotals.length > 0 && <div className="category-summary" aria-label="Detalle de movimientos por categoría">
+        {categoryTotals.map(({ label, income, expenses }) => <div key={label}><span>{label}</span><strong>↑ {pesos.format(income)} · ↓ {pesos.format(expenses)}</strong></div>)}
       </div>}
     </article>
     <article className="chart-panel">
@@ -140,7 +144,7 @@ function ExpenseCharts({ movements, categories = [] }) {
         yAxis={monthYAxis}
         margin={MONTH_CHART_MARGIN}
         sx={chartSx}
-      /> : <p className="chart-empty">No hay gastos para mostrar.</p>}
+      /> : <p className="chart-empty">No hay movimientos para mostrar.</p>}
     </article>
   </div>;
 }

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as api from './api.js'
-import { expensesByCategory, expensesByMonth, movementsByMonth } from './chartData.js'
+import { expensesByCategory, expensesByMonth, movementsByCategory, movementsByMonth } from './chartData.js'
 import { filterMovementRows, filterMovements, sortMovementRows } from './filters.js'
 
 test('turns a failed import response into an error', async () => {
@@ -210,6 +210,18 @@ test('aggregates expenses by category and ignores credits', () => {
   ]), [
     { label: 'Arriendo', total: 400000 },
     { label: 'Comida', total: 5000 },
+  ])
+})
+
+test('aggregates incomes and expenses by category', () => {
+  assert.deepEqual(movementsByCategory([
+    { amount: 1957159, category: 'Remuneración' },
+    { amount: 100000, category: 'Transferencias recibidas' },
+    { amount: -400000, category: 'Arriendo' },
+  ]), [
+    { label: 'Remuneración', income: 1957159, expenses: 0 },
+    { label: 'Arriendo', income: 0, expenses: 400000 },
+    { label: 'Transferencias recibidas', income: 100000, expenses: 0 },
   ])
 })
 
