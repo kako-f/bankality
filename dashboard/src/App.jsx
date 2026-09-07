@@ -104,6 +104,7 @@ function ExpenseCharts({ movements, categories = [] }) {
   const categoryXAxis = useMemo(() => [{
     scaleType: "band",
     data: categoryLabels,
+    tickLabelInterval: () => true,
     tickLabelStyle: { angle: -45, textAnchor: "end", fontSize: 11 },
   }], [categoryLabels]);
   const categoryYAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
@@ -126,6 +127,9 @@ function ExpenseCharts({ movements, categories = [] }) {
         margin={CATEGORY_CHART_MARGIN}
         sx={chartSx}
       /> : <p className="chart-empty">No hay gastos para mostrar.</p>}
+      {categoryTotals.length > 0 && <div className="category-summary" aria-label="Detalle de gastos por categoría">
+        {categoryTotals.map(({ label, total }) => <div key={label}><span>{label}</span><strong>{pesos.format(total)}</strong></div>)}
+      </div>}
     </article>
     <article className="chart-panel">
       <h2>Movimientos por mes</h2>
