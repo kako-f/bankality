@@ -1,2 +1,3 @@
 Django
 xlrd
+openpyxl

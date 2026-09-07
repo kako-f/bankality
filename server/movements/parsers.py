@@ -5,6 +5,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 import xlrd
+import openpyxl
 
 
 def category(description, amount):
@@ -85,6 +86,14 @@ def parse_xls_rows(rows):
 def parse_xls(upload):
     workbook = xlrd.open_workbook(file_contents=upload.read())
     return parse_xls_rows(workbook.sheet_by_index(0).get_rows())
+
+
+def parse_xlsx(upload):
+    workbook = openpyxl.load_workbook(upload, read_only=True, data_only=True)
+    try:
+        return parse_xls_rows(workbook.active.iter_rows())
+    finally:
+        workbook.close()
 
 
 DATE_LINE = re.compile(r'^\s*(\d{2}/\d{2}/\d{4})')

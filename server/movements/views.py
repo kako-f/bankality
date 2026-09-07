@@ -6,7 +6,7 @@ from django.db import IntegrityError, transaction
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from .models import Category, Movement
-from .parsers import parse_pdf, parse_xls
+from .parsers import parse_pdf, parse_xls, parse_xlsx
 from .services import catalog_name, store_records
 
 
@@ -114,7 +114,8 @@ def category_detail(request, category_id):
 
 
 def parse_upload(upload):
-    parser = parse_xls if upload.name.lower().endswith('.xls') else parse_pdf if upload.name.lower().endswith('.pdf') else None
+    extension = upload.name.lower()
+    parser = parse_xlsx if extension.endswith('.xlsx') else parse_xls if extension.endswith('.xls') else parse_pdf if extension.endswith('.pdf') else None
     if parser is None:
         raise ValueError('Formato no reconocido')
     return parser(upload)

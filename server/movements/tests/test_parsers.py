@@ -1,11 +1,24 @@
+from io import BytesIO
 from datetime import date
 
 from django.test import SimpleTestCase
+from openpyxl import Workbook
 
-from movements.parsers import parse_pdf_text, parse_xls_rows
+from movements.parsers import parse_pdf_text, parse_xls_rows, parse_xlsx
 
 
 class ParserTests(SimpleTestCase):
+    def test_parses_xlsx_workbook(self):
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.append(['Fecha', 'Descripción', 'Serie', 'Monto $', 'Saldo Contable $'])
+        sheet.append(['03-09-2026', 'Compra', '1', '-2.200', '3.308.103'])
+        payload = BytesIO()
+        workbook.save(payload)
+        payload.seek(0)
+
+        self.assertEqual(parse_xlsx(payload)[0]['description'], 'Compra')
+
     def test_parses_xlrd_cells(self):
         class Cell:
             def __init__(self, value):

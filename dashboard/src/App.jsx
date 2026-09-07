@@ -409,7 +409,7 @@ function App() {
             <form onSubmit={submit}>
               <input
                 type="file"
-                accept=".pdf,.xls"
+                accept=".pdf,.xls,.xlsx"
                 multiple
                 onChange={selectFiles}
               />
