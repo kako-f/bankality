@@ -63,10 +63,12 @@ def normalize(date_value, description, amount, balance):
 
 def parse_xls_rows(rows):
     rows = [[getattr(cell, 'value', cell) for cell in row] for row in rows]
-    header_index = next((index for index, row in enumerate(rows) if 'Fecha' in row), None)
+    header_index = next((index for index, row in enumerate(rows) if any(str(value).strip().startswith('Fecha') for value in row)), None)
     if header_index is None:
         raise ValueError('No se encontró el encabezado de movimientos')
     headers = {str(value).strip(): index for index, value in enumerate(rows[header_index])}
+    if {'Fecha Transacción', 'Descripción', 'Cargo $', 'Abono $'} <= headers.keys():
+        return parse_bci_rows(rows, header_index, headers)
     required = ('Fecha', 'Descripción', 'Monto $', 'Saldo Contable $')
     if any(name not in headers for name in required):
         raise ValueError('Columnas de movimientos no reconocidas')
@@ -83,13 +85,42 @@ def parse_xls_rows(rows):
     return list(reversed(parsed))
 
 
+def parse_bci_rows(rows, header_index, headers):
+    starting_balance = next(
+        (parse_amount(value) for row in rows[:header_index]
+         for index, value in enumerate(row)
+         if str(value).strip() == 'Saldo Contable'
+         for value in row[index + 1:] if value not in (None, '')),
+        None,
+    )
+    if starting_balance is None:
+        raise ValueError('No se encontró el saldo contable inicial')
+    parsed = []
+    balance = starting_balance
+    for row in rows[header_index + 1:]:
+        if not row or not row[headers['Fecha Transacción']]:
+            continue
+        credit = row[headers['Abono $']]
+        debit = row[headers['Cargo $']]
+        if credit in (None, '') and debit in (None, ''):
+            continue
+        amount = parse_amount(credit) if credit not in (None, '') else -parse_amount(debit)
+        parsed.append(normalize(
+            row[headers['Fecha Transacción']], row[headers['Descripción']], amount, balance,
+        ))
+        balance -= amount
+    if not parsed:
+        raise ValueError('El archivo no contiene movimientos')
+    return list(reversed(parsed))
+
+
 def parse_xls(upload):
     workbook = xlrd.open_workbook(file_contents=upload.read())
     return parse_xls_rows(workbook.sheet_by_index(0).get_rows())
 
 
 def parse_xlsx(upload):
-    workbook = openpyxl.load_workbook(upload, read_only=True, data_only=True)
+    workbook = openpyxl.load_workbook(upload, data_only=True)
     try:
         return parse_xls_rows(workbook.active.iter_rows())
     finally:

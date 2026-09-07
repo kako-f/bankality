@@ -8,6 +8,19 @@ from movements.parsers import parse_pdf_text, parse_xls_rows, parse_xlsx
 
 
 class ParserTests(SimpleTestCase):
+    def test_parses_bci_last_movements_rows(self):
+        rows = [
+            [None, None, None, 'Saldo Contable', '3.505.003', None, None, None],
+            ['Fecha Transacción', 'Fecha Contable', 'Descripción', None, None, None, 'Cargo $', 'Abono $'],
+            ['06/09/2026', '07/09/2026', 'Transferencia recibida', None, None, None, None, '152.000'],
+            ['06/09/2026', '07/09/2026', 'Transferencia enviada', None, None, None, '14.975', None],
+        ]
+
+        parsed = parse_xls_rows(rows)
+
+        self.assertEqual([item['amount'] for item in parsed], [-14975, 152000])
+        self.assertEqual([item['balance'] for item in parsed], [3353003, 3505003])
+
     def test_parses_xlsx_workbook(self):
         workbook = Workbook()
         sheet = workbook.active
