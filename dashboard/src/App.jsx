@@ -22,6 +22,8 @@ const pesos = new Intl.NumberFormat("es-CL", {
   maximumFractionDigits: 0,
 });
 const PAGE_SIZE = 25;
+const CATEGORY_CHART_MARGIN = Object.freeze({ left: 110, right: 20, top: 20, bottom: 45 });
+const MONTH_CHART_MARGIN = Object.freeze({ left: 75, right: 20, top: 20, bottom: 45 });
 const EMPTY_TABLE_FILTERS = {
   dateFrom: "",
   dateTo: "",
@@ -109,7 +111,7 @@ function ExpenseCharts({ movements }) {
         xAxis={categoryXAxis}
         yAxis={categoryYAxis}
         series={categorySeries}
-        margin={{ left: 110, right: 20, top: 20, bottom: 45 }}
+        margin={CATEGORY_CHART_MARGIN}
         sx={chartSx}
       /> : <p className="chart-empty">No hay gastos para mostrar.</p>}
     </article>
@@ -120,7 +122,7 @@ function ExpenseCharts({ movements }) {
         xAxis={monthXAxis}
         series={monthSeries}
         yAxis={monthYAxis}
-        margin={{ left: 75, right: 20, top: 20, bottom: 45 }}
+        margin={MONTH_CHART_MARGIN}
         sx={chartSx}
       /> : <p className="chart-empty">No hay gastos para mostrar.</p>}
     </article>
