@@ -173,17 +173,22 @@ function App() {
       .catch((error) => setMessage(error.message))
       .finally(() => setLoading(false));
   }, []);
+  const summaryMovements = useMemo(
+    () => sortMovementRows(filterMovementRows(movements, { date: dashboardTableFilters.date }), { field: "date", direction: "desc" }),
+    [movements, dashboardTableFilters.date],
+  );
   const totals = useMemo(
     () =>
-      movements.reduce(
+      summaryMovements.reduce(
         (result, item) => ({
           credits: result.credits + Math.max(item.amount, 0),
           debits: result.debits - Math.min(item.amount, 0),
         }),
         { credits: 0, debits: 0 },
       ),
-    [movements],
+    [summaryMovements],
   );
+  const finalBalance = summaryMovements[0]?.balance || 0;
 
   const categoryNames = categories.map((category) => category.name);
   const dashboardMovements = sortMovementRows(filterMovementRows(movements, dashboardTableFilters), dashboardSort);
@@ -307,7 +312,7 @@ function App() {
             <div className="cards">
               <article>
                 <span>Saldo final</span>
-                <strong>{pesos.format(movements.at(-1)?.balance || 0)}</strong>
+                <strong>{pesos.format(finalBalance)}</strong>
               </article>
               <article>
                 <span>Abonos</span>
