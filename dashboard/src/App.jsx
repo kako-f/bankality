@@ -9,7 +9,7 @@ import {
   renameCategory,
   updateCategory,
 } from "./api.js";
-import { filterMovements } from "./filters.js";
+import { filterMovementRows, filterMovements } from "./filters.js";
 import { expensesByCategory, expensesByMonth } from "./chartData.js";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { LineChart } from "@mui/x-charts/LineChart";
@@ -20,12 +20,35 @@ const pesos = new Intl.NumberFormat("es-CL", {
   maximumFractionDigits: 0,
 });
 const PAGE_SIZE = 25;
+const EMPTY_TABLE_FILTERS = {
+  date: "",
+  description: "",
+  category: "",
+  amountMin: "",
+  amountMax: "",
+  balanceMin: "",
+  balanceMax: "",
+};
 
-function MovementsTable({ movements, categories, editable, onCategoryChange }) {
+function ColumnFilters({ filters, categories, onChange }) {
+  const update = (field) => (event) => onChange({ ...filters, [field]: event.target.value });
+  return <tr className="column-filters">
+    <th><input aria-label="Filtrar por fecha" type="date" value={filters.date} onChange={update("date")} /></th>
+    <th><input aria-label="Filtrar por descripción" placeholder="Buscar" value={filters.description} onChange={update("description")} /></th>
+    <th><select aria-label="Filtrar por categoría" value={filters.category} onChange={update("category")}><option value="">Todas</option>{categories.map((category) => <option key={category}>{category}</option>)}</select></th>
+    <th><div className="range-filter"><input aria-label="Monto mínimo" type="number" placeholder="Mín." value={filters.amountMin} onChange={update("amountMin")} /><input aria-label="Monto máximo" type="number" placeholder="Máx." value={filters.amountMax} onChange={update("amountMax")} /></div></th>
+    <th><div className="range-filter"><input aria-label="Saldo mínimo" type="number" placeholder="Mín." value={filters.balanceMin} onChange={update("balanceMin")} /><input aria-label="Saldo máximo" type="number" placeholder="Máx." value={filters.balanceMax} onChange={update("balanceMax")} /></div></th>
+  </tr>;
+}
+
+function MovementsTable({ movements, categories, editable, onCategoryChange, filters, onFilterChange }) {
   return (
     <div className="panel">
       <table>
-        <thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Monto</th><th>Saldo</th></tr></thead>
+        <thead>
+          <tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Monto</th><th>Saldo</th></tr>
+          <ColumnFilters filters={filters} categories={categories} onChange={onFilterChange} />
+        </thead>
         <tbody>{movements.map((item) => (
           <tr key={item.id}>
             <td>{item.date}</td><td>{item.description}</td>
@@ -96,6 +119,8 @@ function App() {
   const [categorizeMovementsPage, setCategorizeMovementsPage] = useState(1);
   const [dashboardFilter, setDashboardFilter] = useState("");
   const [categorizeFilter, setCategorizeFilter] = useState("");
+  const [dashboardTableFilters, setDashboardTableFilters] = useState(EMPTY_TABLE_FILTERS);
+  const [categorizeTableFilters, setCategorizeTableFilters] = useState(EMPTY_TABLE_FILTERS);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [categoryEdits, setCategoryEdits] = useState({});
   const [replacementIds, setReplacementIds] = useState({});
@@ -147,8 +172,8 @@ function App() {
   );
 
   const categoryNames = categories.map((category) => category.name);
-  const dashboardMovements = filterMovements(movements, dashboardFilter);
-  const categorizeMovements = filterMovements(movements, categorizeFilter);
+  const dashboardMovements = filterMovementRows(filterMovements(movements, dashboardFilter), dashboardTableFilters);
+  const categorizeMovements = filterMovementRows(filterMovements(movements, categorizeFilter), categorizeTableFilters);
   const dashboardPages = Math.max(1, Math.ceil(dashboardMovements.length / PAGE_SIZE));
   const categorizePages = Math.max(1, Math.ceil(categorizeMovements.length / PAGE_SIZE));
   const dashboardRows = dashboardMovements.slice((dashboardPage - 1) * PAGE_SIZE, dashboardPage * PAGE_SIZE);
@@ -279,7 +304,12 @@ function App() {
             {loading ? (
               <p>Cargando…</p>
             ) : (
-              <MovementsTable movements={dashboardRows} categories={categoryNames} />
+              <MovementsTable
+                movements={dashboardRows}
+                categories={categoryNames}
+                filters={dashboardTableFilters}
+                onFilterChange={(nextFilters) => { setDashboardTableFilters(nextFilters); setDashboardPage(1); }}
+              />
             )}
             <Pagination page={dashboardPage} pages={dashboardPages} setPage={setDashboardPage} />
           </section>
@@ -291,7 +321,14 @@ function App() {
             </nav>
             {categorizePage === "movements" ? <>
               <div className="table-heading"><h2>Modificar categorías</h2><label>Filtrar categoría <select value={categorizeFilter} onChange={(event) => { setCategorizeFilter(event.target.value); setCategorizeMovementsPage(1); }}><option value="">Todas</option>{categoryNames.map((category) => <option key={category}>{category}</option>)}</select></label></div>
-              {loading ? <p>Cargando…</p> : <MovementsTable movements={categorizeRows} categories={categoryNames} editable onCategoryChange={changeCategory} />}
+              {loading ? <p>Cargando…</p> : <MovementsTable
+                movements={categorizeRows}
+                categories={categoryNames}
+                editable
+                onCategoryChange={changeCategory}
+                filters={categorizeTableFilters}
+                onFilterChange={(nextFilters) => { setCategorizeTableFilters(nextFilters); setCategorizeMovementsPage(1); }}
+              />}
               <Pagination page={categorizeMovementsPage} pages={categorizePages} setPage={setCategorizeMovementsPage} />
             </> : loading ? <p>Cargando…</p> : <>
               <h2>Categorías</h2>

@@ -231,6 +231,31 @@ select {
     padding: .3rem;
 }
 
+input {
+    background: #293a4d;
+    border: 1px solid #62788c;
+    border-radius: .25rem;
+    color: #dce4eb;
+    font: inherit;
+    padding: .3rem;
+}
+
+.column-filters th {
+    padding-top: .35rem;
+}
+
+.column-filters input,
+.column-filters select {
+    max-width: 100%;
+    width: 100%;
+}
+
+.range-filter {
+    display: grid;
+    gap: .25rem;
+    grid-template-columns: 1fr 1fr;
+}
+
 .import {
     color: #dce4eb;
     max-width: 650px;
