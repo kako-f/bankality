@@ -121,6 +121,21 @@ h2 {
     margin-left: .5rem;
 }
 
+.analysis-filters {
+    align-items: center;
+    display: flex;
+    gap: .75rem;
+}
+
+.analysis-filters label {
+    color: var(--muted);
+    font-size: .85rem;
+}
+
+.analysis-filters input {
+    margin-left: .35rem;
+}
+
 .local-status {
     background: #274f3a;
     border-radius: 999px;
@@ -458,6 +473,10 @@ form button {
     .table-heading {
         align-items: start;
         flex-direction: column;
+    }
+
+    .analysis-filters {
+        flex-wrap: wrap;
     }
 
     .cards {

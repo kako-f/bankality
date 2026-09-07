@@ -134,6 +134,7 @@ function App() {
   });
   const [section, setSection] = useState("dashboard");
   const [categorizePage, setCategorizePage] = useState("movements");
+  const [analysisDateFilters, setAnalysisDateFilters] = useState({ dateFrom: "", dateTo: "" });
   const [movements, setMovements] = useState([]);
   const [categories, setCategories] = useState([]);
   const [files, setFiles] = useState([]);
@@ -213,6 +214,10 @@ function App() {
   const categorizeMovements = useMemo(
     () => sortMovementRows(filterMovementRows(movements, categorizeTableFilters), categorizeSort),
     [movements, categorizeTableFilters, categorizeSort],
+  );
+  const analysisMovements = useMemo(
+    () => filterMovementRows(movements, analysisDateFilters),
+    [movements, analysisDateFilters],
   );
   const dashboardPages = Math.max(1, Math.ceil(dashboardMovements.length / PAGE_SIZE));
   const categorizePages = Math.max(1, Math.ceil(categorizeMovements.length / PAGE_SIZE));
@@ -338,6 +343,12 @@ function App() {
             Categorizar
           </button>
           <button
+            className={section === "analysis" ? "active" : ""}
+            onClick={() => setSection("analysis")}
+          >
+            Análisis
+          </button>
+          <button
             className={section === "import" ? "active" : ""}
             onClick={() => setSection("import")}
           >
@@ -349,7 +360,7 @@ function App() {
         <header className="topbar">
           <div>
             <p className="eyebrow">Movimientos bancarios</p>
-            <h1>{section === "dashboard" ? "Dashboard" : section === "categorize" ? "Categorizar" : "Importar"}</h1>
+            <h1>{section === "dashboard" ? "Dashboard" : section === "categorize" ? "Categorizar" : section === "analysis" ? "Análisis" : "Importar"}</h1>
           </div>
           <div className="topbar-actions">
             <button className="theme-toggle" type="button" onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}>
@@ -375,7 +386,6 @@ function App() {
                 <strong>{pesos.format(totals.debits)}</strong>
               </article>
             </div>
-            {!loading && <ExpenseCharts movements={dashboardMovements} />}
             <div className="table-heading"><h2>Movimientos</h2></div>
             {loading ? (
               <p>Cargando…</p>
@@ -390,6 +400,14 @@ function App() {
               />
             )}
             <Pagination page={dashboardPage} pages={dashboardPages} setPage={setDashboardPage} />
+          </section>
+        ) : section === "analysis" ? (
+          <section>
+            <div className="table-heading"><h2>Gastos</h2><div className="analysis-filters">
+              <label>Desde <input type="date" value={analysisDateFilters.dateFrom} onChange={(event) => setAnalysisDateFilters((current) => ({ ...current, dateFrom: event.target.value }))} /></label>
+              <label>Hasta <input type="date" value={analysisDateFilters.dateTo} onChange={(event) => setAnalysisDateFilters((current) => ({ ...current, dateTo: event.target.value }))} /></label>
+            </div></div>
+            {loading ? <p>Cargando…</p> : <ExpenseCharts movements={analysisMovements} />}
           </section>
         ) : section === "categorize" ? (
           <section>
