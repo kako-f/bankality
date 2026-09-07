@@ -21,7 +21,8 @@ const pesos = new Intl.NumberFormat("es-CL", {
 });
 const PAGE_SIZE = 25;
 const EMPTY_TABLE_FILTERS = {
-  date: "",
+  dateFrom: "",
+  dateTo: "",
   description: "",
   category: "",
   amountMin: "",
@@ -41,7 +42,7 @@ function SortableHeader({ field, label, sort, onSort }) {
 function ColumnFilters({ filters, categories, onChange }) {
   const update = (field) => (event) => onChange({ ...filters, [field]: event.target.value });
   return <tr className="column-filters">
-    <th><input aria-label="Filtrar por fecha" type="date" value={filters.date} onChange={update("date")} /></th>
+    <th><div className="date-range-filter"><input aria-label="Fecha inicial" title="Desde" type="date" value={filters.dateFrom} onChange={update("dateFrom")} /><input aria-label="Fecha final" title="Hasta" type="date" value={filters.dateTo} onChange={update("dateTo")} /></div></th>
     <th><input aria-label="Filtrar por descripción" placeholder="Buscar" value={filters.description} onChange={update("description")} /></th>
     <th><select aria-label="Filtrar por categoría" value={filters.category} onChange={update("category")}><option value="">Todas</option>{categories.map((category) => <option key={category}>{category}</option>)}</select></th>
     <th><div className="range-filter"><input aria-label="Monto mínimo" type="number" placeholder="Mín." value={filters.amountMin} onChange={update("amountMin")} /><input aria-label="Monto máximo" type="number" placeholder="Máx." value={filters.amountMax} onChange={update("amountMax")} /></div></th>
@@ -174,8 +175,8 @@ function App() {
       .finally(() => setLoading(false));
   }, []);
   const summaryMovements = useMemo(
-    () => sortMovementRows(filterMovementRows(movements, { date: dashboardTableFilters.date }), { field: "date", direction: "desc" }),
-    [movements, dashboardTableFilters.date],
+    () => sortMovementRows(filterMovementRows(movements, { dateFrom: dashboardTableFilters.dateFrom, dateTo: dashboardTableFilters.dateTo }), { field: "date", direction: "desc" }),
+    [movements, dashboardTableFilters.dateFrom, dashboardTableFilters.dateTo],
   );
   const totals = useMemo(
     () =>

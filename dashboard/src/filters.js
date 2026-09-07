@@ -7,7 +7,8 @@ export function filterMovementRows(movements, filters = {}) {
   const balanceMin = filters.balanceMin === "" || filters.balanceMin == null ? null : Number(filters.balanceMin);
   const balanceMax = filters.balanceMax === "" || filters.balanceMax == null ? null : Number(filters.balanceMax);
   return movements.filter((movement) => (
-    (!filters.date || movement.date === filters.date) &&
+    (!filters.dateFrom || movement.date >= filters.dateFrom) &&
+    (!filters.dateTo || movement.date <= filters.dateTo) &&
     (!description || movement.description.toLocaleLowerCase().includes(description)) &&
     (!filters.category || movement.category.trim() === filters.category.trim()) &&
     (amountMin == null || Number.isNaN(amountMin) || movement.amount >= amountMin) &&

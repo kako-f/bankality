@@ -286,6 +286,11 @@ input {
     grid-template-columns: 1fr 1fr;
 }
 
+.date-range-filter {
+    display: grid;
+    gap: .25rem;
+}
+
 .import {
     color: #dce4eb;
     max-width: 650px;

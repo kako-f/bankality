@@ -132,6 +132,18 @@ test('filters movement rows by each table column', () => {
   assert.deepEqual(filterMovementRows(movements, { description: 'super', amountMin: -30000, balanceMax: 999000 }), [movements[1]])
 })
 
+test('filters dates inclusively between start and end', () => {
+  const movements = [
+    { date: '2026-09-01', description: 'Antes' },
+    { date: '2026-09-02', description: 'Inicio' },
+    { date: '2026-09-04', description: 'Dentro' },
+    { date: '2026-09-06', description: 'Fin' },
+    { date: '2026-09-07', description: 'Después' },
+  ]
+
+  assert.deepEqual(filterMovementRows(movements, { dateFrom: '2026-09-02', dateTo: '2026-09-06' }).map(({ description }) => description), ['Inicio', 'Dentro', 'Fin'])
+})
+
 test('filters rows beyond the first 25-row page', () => {
   const movements = Array.from({ length: 26 }, (_, index) => ({
     date: '2026-09-02',
