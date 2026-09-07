@@ -16,3 +16,13 @@ export function filterMovementRows(movements, filters = {}) {
     (balanceMax == null || Number.isNaN(balanceMax) || movement.balance <= balanceMax)
   ));
 }
+
+export function sortMovementRows(movements, { field = 'date', direction = 'desc' } = {}) {
+  const factor = direction === 'asc' ? 1 : -1;
+  return [...movements].sort((left, right) => {
+    const comparison = field === 'date'
+      ? left.date.localeCompare(right.date)
+      : left[field].localeCompare(right[field], 'es-CL', { sensitivity: 'base' });
+    return comparison * factor;
+  });
+}

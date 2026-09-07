@@ -9,7 +9,7 @@ import {
   renameCategory,
   updateCategory,
 } from "./api.js";
-import { filterMovementRows } from "./filters.js";
+import { filterMovementRows, sortMovementRows } from "./filters.js";
 import { expensesByCategory, expensesByMonth } from "./chartData.js";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { LineChart } from "@mui/x-charts/LineChart";
@@ -30,6 +30,14 @@ const EMPTY_TABLE_FILTERS = {
   balanceMax: "",
 };
 
+function SortableHeader({ field, label, sort, onSort }) {
+  const active = sort.field === field;
+  const direction = active ? sort.direction : "none";
+  return <th aria-sort={direction === "none" ? "none" : direction === "asc" ? "ascending" : "descending"}>
+    <button type="button" className="sort-button" onClick={() => onSort(field)}>{label} <span aria-hidden="true">{active ? (sort.direction === "asc" ? "↑" : "↓") : "↕"}</span></button>
+  </th>;
+}
+
 function ColumnFilters({ filters, categories, onChange }) {
   const update = (field) => (event) => onChange({ ...filters, [field]: event.target.value });
   return <tr className="column-filters">
@@ -41,12 +49,12 @@ function ColumnFilters({ filters, categories, onChange }) {
   </tr>;
 }
 
-function MovementsTable({ movements, categories, editable, onCategoryChange, filters, onFilterChange }) {
+function MovementsTable({ movements, categories, editable, onCategoryChange, filters, onFilterChange, sort, onSort }) {
   return (
     <div className="panel">
       <table>
         <thead>
-          <tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Monto</th><th>Saldo</th></tr>
+          <tr><SortableHeader field="date" label="Fecha" sort={sort} onSort={onSort} /><SortableHeader field="description" label="Descripción" sort={sort} onSort={onSort} /><SortableHeader field="category" label="Categoría" sort={sort} onSort={onSort} /><th>Monto</th><th>Saldo</th></tr>
           <ColumnFilters filters={filters} categories={categories} onChange={onFilterChange} />
         </thead>
         <tbody>{movements.map((item) => (
@@ -119,6 +127,8 @@ function App() {
   const [categorizeMovementsPage, setCategorizeMovementsPage] = useState(1);
   const [dashboardTableFilters, setDashboardTableFilters] = useState(EMPTY_TABLE_FILTERS);
   const [categorizeTableFilters, setCategorizeTableFilters] = useState(EMPTY_TABLE_FILTERS);
+  const [dashboardSort, setDashboardSort] = useState({ field: "date", direction: "desc" });
+  const [categorizeSort, setCategorizeSort] = useState({ field: "date", direction: "desc" });
   const [newCategoryName, setNewCategoryName] = useState("");
   const [categoryEdits, setCategoryEdits] = useState({});
   const [replacementIds, setReplacementIds] = useState({});
@@ -167,8 +177,8 @@ function App() {
   );
 
   const categoryNames = categories.map((category) => category.name);
-  const dashboardMovements = filterMovementRows(movements, dashboardTableFilters);
-  const categorizeMovements = filterMovementRows(movements, categorizeTableFilters);
+  const dashboardMovements = sortMovementRows(filterMovementRows(movements, dashboardTableFilters), dashboardSort);
+  const categorizeMovements = sortMovementRows(filterMovementRows(movements, categorizeTableFilters), categorizeSort);
   const dashboardPages = Math.max(1, Math.ceil(dashboardMovements.length / PAGE_SIZE));
   const categorizePages = Math.max(1, Math.ceil(categorizeMovements.length / PAGE_SIZE));
   const dashboardRows = dashboardMovements.slice((dashboardPage - 1) * PAGE_SIZE, dashboardPage * PAGE_SIZE);
@@ -304,6 +314,8 @@ function App() {
                 categories={categoryNames}
                 filters={dashboardTableFilters}
                 onFilterChange={(nextFilters) => { setDashboardTableFilters(nextFilters); setDashboardPage(1); }}
+                sort={dashboardSort}
+                onSort={(field) => { setDashboardSort((current) => ({ field, direction: current.field === field && current.direction === "asc" ? "desc" : "asc" })); setDashboardPage(1); }}
               />
             )}
             <Pagination page={dashboardPage} pages={dashboardPages} setPage={setDashboardPage} />
@@ -323,6 +335,8 @@ function App() {
                 onCategoryChange={changeCategory}
                 filters={categorizeTableFilters}
                 onFilterChange={(nextFilters) => { setCategorizeTableFilters(nextFilters); setCategorizeMovementsPage(1); }}
+                sort={categorizeSort}
+                onSort={(field) => { setCategorizeSort((current) => ({ field, direction: current.field === field && current.direction === "asc" ? "desc" : "asc" })); setCategorizeMovementsPage(1); }}
               />}
               <Pagination page={categorizeMovementsPage} pages={categorizePages} setPage={setCategorizeMovementsPage} />
             </> : loading ? <p>Cargando…</p> : <>

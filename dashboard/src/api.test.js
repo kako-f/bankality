@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as api from './api.js'
 import { expensesByCategory, expensesByMonth } from './chartData.js'
-import { filterMovementRows, filterMovements } from './filters.js'
+import { filterMovementRows, filterMovements, sortMovementRows } from './filters.js'
 
 test('turns a failed import response into an error', async () => {
   const originalFetch = globalThis.fetch
@@ -142,6 +142,18 @@ test('filters rows beyond the first 25-row page', () => {
   }))
 
   assert.deepEqual(filterMovementRows(movements, { description: 'arriendo' }), [movements[25]])
+})
+
+test('sorts date, category, and description in both directions', () => {
+  const movements = [
+    { date: '2026-09-02', category: 'Comida', description: 'Zeta' },
+    { date: '2026-09-04', category: 'Arriendo', description: 'Alfa' },
+    { date: '2026-09-03', category: 'Bancos', description: 'Beta' },
+  ]
+
+  assert.deepEqual(sortMovementRows(movements, { field: 'date', direction: 'asc' }).map(({ date }) => date), ['2026-09-02', '2026-09-03', '2026-09-04'])
+  assert.deepEqual(sortMovementRows(movements, { field: 'category', direction: 'asc' }).map(({ category }) => category), ['Arriendo', 'Bancos', 'Comida'])
+  assert.deepEqual(sortMovementRows(movements, { field: 'description', direction: 'desc' }).map(({ description }) => description), ['Zeta', 'Beta', 'Alfa'])
 })
 
 test('aggregates expenses by category and ignores credits', () => {
