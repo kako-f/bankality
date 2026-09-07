@@ -210,19 +210,6 @@ button:disabled {
     margin: 0;
 }
 
-.category-axis-labels {
-    display: grid;
-    gap: .35rem;
-    margin: -.75rem 25px .75rem 75px;
-    text-align: center;
-}
-
-.category-axis-labels span {
-    color: var(--muted);
-    font-size: .7rem;
-    overflow-wrap: anywhere;
-}
-
 .category-summary {
     border-top: 1px solid var(--border);
     display: grid;

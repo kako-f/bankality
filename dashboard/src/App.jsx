@@ -309,7 +309,13 @@ function ExpenseCharts({ movements, categories = [] }) {
         tickLabelMinGap: 0,
         tickSpacing: 0,
         label: "Categoría",
-        tickLabelStyle: { angle: -45, textAnchor: "end", fontSize: 12 },
+        tickLabelStyle: {
+          angle: -45,
+          textAnchor: "end",
+          fontSize: 12,
+          fill: "#b8c7d3",
+        },
+        labelStyle: { fill: "#b8c7d3", fontSize: 12 },
       },
     ],
     [categoryLabels],
@@ -353,15 +359,6 @@ function ExpenseCharts({ movements, categories = [] }) {
           />
         ) : (
           <p className="chart-empty">No hay movimientos para mostrar.</p>
-        )}
-        {categoryTotals.length > 0 && (
-          <div
-            className="category-axis-labels"
-            aria-label="Categorías del eje X"
-            style={{ gridTemplateColumns: `repeat(${categoryLabels.length}, minmax(0, 1fr))` }}
-          >
-            {categoryLabels.map((label) => <span key={label}>{label}</span>)}
-          </div>
         )}
         {categoryTotals.length > 0 && (
           <div
