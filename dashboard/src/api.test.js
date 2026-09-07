@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as api from './api.js'
+import { expensesByCategory, expensesByMonth } from './chartData.js'
 import { filterMovements } from './filters.js'
 
 test('turns a failed import response into an error', async () => {
@@ -120,4 +121,24 @@ test('filters padded historical categories by their canonical catalog name', asy
   const rent = { id: 1, category: ' \tArriendo\u00a0 ' }
 
   assert.deepEqual(filterMovements([rent], 'Arriendo'), [rent])
+})
+
+test('aggregates expenses by category and ignores credits', () => {
+  assert.deepEqual(expensesByCategory([
+    { amount: -400000, category: 'Arriendo' },
+    { amount: -2000, category: 'Comida' },
+    { amount: -3000, category: 'Comida' },
+    { amount: 100000, category: 'Sueldo' },
+  ]), [
+    { label: 'Arriendo', total: 400000 },
+    { label: 'Comida', total: 5000 },
+  ])
+})
+
+test('aggregates expenses by month in chronological order', () => {
+  assert.deepEqual(expensesByMonth([
+    { date: '2026-10-03', amount: -2000 },
+    { date: '2026-09-30', amount: -3000 },
+    { date: '2026-10-01', amount: 1000 },
+  ]).map(({ total }) => total), [3000, 2000])
 })

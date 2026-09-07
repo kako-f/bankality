@@ -10,6 +10,7 @@ import {
   updateCategory,
 } from "./api.js";
 import { filterMovements } from "./filters.js";
+import { expensesByCategory, expensesByMonth } from "./chartData.js";
 
 const pesos = new Intl.NumberFormat("es-CL", {
   style: "currency",
@@ -40,6 +41,36 @@ function Pagination({ page, pages, setPage }) {
     <button type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}>Anterior</button>
     <span>Página {page} de {pages}</span>
     <button type="button" disabled={page >= pages} onClick={() => setPage(page + 1)}>Siguiente</button>
+  </div>;
+}
+
+function ExpenseCharts({ movements }) {
+  const categoryTotals = expensesByCategory(movements);
+  const monthTotals = expensesByMonth(movements);
+  const categoryMax = categoryTotals[0]?.total || 1;
+  const monthMax = Math.max(...monthTotals.map(({ total }) => total), 1);
+  const formatMonth = (label) => label.replace(".", "");
+
+  return <div className="charts" aria-label="Gráficos de gastos">
+    <article className="chart-panel">
+      <h2>Gastos por categoría</h2>
+      {categoryTotals.length ? <div className="chart-bars">
+        {categoryTotals.map(({ label, total }) => <div className="chart-row" key={label}>
+          <div className="chart-label"><span>{label}</span><strong>{pesos.format(total)}</strong></div>
+          <div className="chart-track"><span style={{ width: `${(total / categoryMax) * 100}%` }} /></div>
+        </div>)}
+      </div> : <p className="chart-empty">No hay gastos para mostrar.</p>}
+    </article>
+    <article className="chart-panel">
+      <h2>Evolución mensual</h2>
+      {monthTotals.length ? <div className="month-chart">
+        {monthTotals.map(({ label, total }) => <div className="month-column" key={label}>
+          <strong>{pesos.format(total)}</strong>
+          <div className="month-track"><span style={{ height: `${(total / monthMax) * 100}%` }} /></div>
+          <span>{formatMonth(label)}</span>
+        </div>)}
+      </div> : <p className="chart-empty">No hay gastos para mostrar.</p>}
+    </article>
   </div>;
 }
 
@@ -233,6 +264,7 @@ function App() {
                 <strong>{pesos.format(totals.debits)}</strong>
               </article>
             </div>
+            {!loading && <ExpenseCharts movements={dashboardMovements} />}
             <div className="table-heading"><h2>Movimientos</h2><label>Filtrar categoría <select value={dashboardFilter} onChange={(event) => { setDashboardFilter(event.target.value); setDashboardPage(1); }}><option value="">Todas</option>{categoryNames.map((category) => <option key={category}>{category}</option>)}</select></label></div>
             {loading ? (
               <p>Cargando…</p>
