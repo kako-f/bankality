@@ -81,15 +81,24 @@ function Pagination({ page, pages, setPage }) {
 }
 
 function ExpenseCharts({ movements }) {
-  const categoryTotals = expensesByCategory(movements);
-  const monthTotals = expensesByMonth(movements);
-  const chartText = { fill: "var(--muted)" };
-  const chartSx = {
-    "& .MuiChartsAxis-tickLabel": chartText,
-    "& .MuiChartsAxis-label": chartText,
-    "& .MuiChartsLegend-label": chartText,
+  const categoryTotals = useMemo(() => expensesByCategory(movements), [movements]);
+  const monthTotals = useMemo(() => expensesByMonth(movements), [movements]);
+  const chartSx = useMemo(() => ({
+    "& .MuiChartsAxis-tickLabel": { fill: "var(--muted)" },
+    "& .MuiChartsAxis-label": { fill: "var(--muted)" },
+    "& .MuiChartsLegend-label": { fill: "var(--muted)" },
     "& .MuiChartsAxis-line, & .MuiChartsAxis-tick": { stroke: "var(--border)" },
-  };
+  }), []);
+  const categoryLabels = useMemo(() => categoryTotals.map(({ label }) => label), [categoryTotals]);
+  const categoryValues = useMemo(() => categoryTotals.map(({ total }) => total), [categoryTotals]);
+  const monthLabels = useMemo(() => monthTotals.map(({ label }) => label), [monthTotals]);
+  const monthValues = useMemo(() => monthTotals.map(({ total }) => total), [monthTotals]);
+  const categoryXAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
+  const categoryYAxis = useMemo(() => [{ scaleType: "band", data: categoryLabels }], [categoryLabels]);
+  const categorySeries = useMemo(() => [{ data: categoryValues, label: "Gastos", color: "var(--danger)" }], [categoryValues]);
+  const monthXAxis = useMemo(() => [{ scaleType: "point", data: monthLabels }], [monthLabels]);
+  const monthYAxis = useMemo(() => [{ valueFormatter: (value) => pesos.format(value) }], []);
+  const monthSeries = useMemo(() => [{ data: monthValues, label: "Gastos", color: "var(--accent)", area: true, showMark: true }], [monthValues]);
 
   return <div className="charts" aria-label="Gráficos de gastos">
     <article className="chart-panel">
@@ -97,9 +106,9 @@ function ExpenseCharts({ movements }) {
       {categoryTotals.length ? <BarChart
         layout="horizontal"
         height={Math.max(250, categoryTotals.length * 54)}
-        xAxis={[{ valueFormatter: (value) => pesos.format(value) }]}
-        yAxis={[{ scaleType: "band", data: categoryTotals.map(({ label }) => label) }]}
-        series={[{ data: categoryTotals.map(({ total }) => total), label: "Gastos", color: "var(--danger)" }]}
+        xAxis={categoryXAxis}
+        yAxis={categoryYAxis}
+        series={categorySeries}
         margin={{ left: 110, right: 20, top: 20, bottom: 45 }}
         sx={chartSx}
       /> : <p className="chart-empty">No hay gastos para mostrar.</p>}
@@ -108,9 +117,9 @@ function ExpenseCharts({ movements }) {
       <h2>Evolución mensual</h2>
       {monthTotals.length ? <LineChart
         height={300}
-        xAxis={[{ scaleType: "point", data: monthTotals.map(({ label }) => label) }]}
-        series={[{ data: monthTotals.map(({ total }) => total), label: "Gastos", color: "var(--accent)", area: true, showMark: true }]}
-        yAxis={[{ valueFormatter: (value) => pesos.format(value) }]}
+        xAxis={monthXAxis}
+        series={monthSeries}
+        yAxis={monthYAxis}
         margin={{ left: 75, right: 20, top: 20, bottom: 45 }}
         sx={chartSx}
       /> : <p className="chart-empty">No hay gastos para mostrar.</p>}
@@ -197,8 +206,14 @@ function App() {
   const finalBalance = summaryMovements[0]?.balance || 0;
 
   const categoryNames = categories.map((category) => category.name);
-  const dashboardMovements = sortMovementRows(filterMovementRows(movements, dashboardTableFilters), dashboardSort);
-  const categorizeMovements = sortMovementRows(filterMovementRows(movements, categorizeTableFilters), categorizeSort);
+  const dashboardMovements = useMemo(
+    () => sortMovementRows(filterMovementRows(movements, dashboardTableFilters), dashboardSort),
+    [movements, dashboardTableFilters, dashboardSort],
+  );
+  const categorizeMovements = useMemo(
+    () => sortMovementRows(filterMovementRows(movements, categorizeTableFilters), categorizeSort),
+    [movements, categorizeTableFilters, categorizeSort],
+  );
   const dashboardPages = Math.max(1, Math.ceil(dashboardMovements.length / PAGE_SIZE));
   const categorizePages = Math.max(1, Math.ceil(categorizeMovements.length / PAGE_SIZE));
   const dashboardRows = dashboardMovements.slice((dashboardPage - 1) * PAGE_SIZE, dashboardPage * PAGE_SIZE);
