@@ -10,12 +10,12 @@ import openpyxl
 
 def category(description, amount):
     text = description.upper()
+    if 'TRANSFER' in text or 'TRASPASO' in text:
+        return 'Transferencias'
     if amount > 0:
         if 'REMUNERACION' in text:
             return 'Remuneración'
-        return 'Transferencias recibidas' if 'TRANSFER' in text or 'ABONO' in text else 'Otros abonos'
-    if 'TRANSFER A' in text or 'TRASPASO' in text:
-        return 'Transferencias'
+        return 'Otros abonos'
     if any(term in text for term in ('JUMBO', 'UNIMARC', 'TOTTUS', 'EXPRESS')):
         return 'Supermercado'
     if any(term in text for term in ('CONCESION', 'CHILEPASA', 'PARK', 'PLAZA MAULE')):

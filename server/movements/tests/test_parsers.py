@@ -4,10 +4,20 @@ from datetime import date
 from django.test import SimpleTestCase
 from openpyxl import Workbook
 
-from movements.parsers import parse_pdf_text, parse_xls_rows, parse_xlsx
+from movements.parsers import category, parse_pdf_text, parse_xls_rows, parse_xlsx
 
 
 class ParserTests(SimpleTestCase):
+    def test_groups_transfer_category_variants(self):
+        for description, amount in (
+            ('Transferencia', -100),
+            ('Transferencias recibidas', 100),
+            ('Transferencia recibida', 100),
+            ('Traspaso enviado', -100),
+        ):
+            with self.subTest(description=description):
+                self.assertEqual(category(description, amount), 'Transferencias')
+
     def test_parses_bci_last_movements_rows(self):
         rows = [
             [None, None, None, 'Saldo Contable', '3.505.003', None, None, None],
