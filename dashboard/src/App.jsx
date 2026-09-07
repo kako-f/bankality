@@ -9,7 +9,7 @@ import {
   renameCategory,
   updateCategory,
 } from "./api.js";
-import { filterMovementRows, filterMovements } from "./filters.js";
+import { filterMovementRows } from "./filters.js";
 import { expensesByCategory, expensesByMonth } from "./chartData.js";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { LineChart } from "@mui/x-charts/LineChart";
@@ -117,8 +117,6 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [dashboardPage, setDashboardPage] = useState(1);
   const [categorizeMovementsPage, setCategorizeMovementsPage] = useState(1);
-  const [dashboardFilter, setDashboardFilter] = useState("");
-  const [categorizeFilter, setCategorizeFilter] = useState("");
   const [dashboardTableFilters, setDashboardTableFilters] = useState(EMPTY_TABLE_FILTERS);
   const [categorizeTableFilters, setCategorizeTableFilters] = useState(EMPTY_TABLE_FILTERS);
   const [newCategoryName, setNewCategoryName] = useState("");
@@ -127,10 +125,7 @@ function App() {
 
   async function refreshCategories() {
     const nextCategories = await loadCategories();
-    const nextCategoryNames = nextCategories.map((category) => category.name);
     setCategories(nextCategories);
-    setDashboardFilter((current) => current && !nextCategoryNames.includes(current) ? "" : current);
-    setCategorizeFilter((current) => current && !nextCategoryNames.includes(current) ? "" : current);
     setCategoryEdits({});
     setReplacementIds({});
   }
@@ -172,8 +167,8 @@ function App() {
   );
 
   const categoryNames = categories.map((category) => category.name);
-  const dashboardMovements = filterMovementRows(filterMovements(movements, dashboardFilter), dashboardTableFilters);
-  const categorizeMovements = filterMovementRows(filterMovements(movements, categorizeFilter), categorizeTableFilters);
+  const dashboardMovements = filterMovementRows(movements, dashboardTableFilters);
+  const categorizeMovements = filterMovementRows(movements, categorizeTableFilters);
   const dashboardPages = Math.max(1, Math.ceil(dashboardMovements.length / PAGE_SIZE));
   const categorizePages = Math.max(1, Math.ceil(categorizeMovements.length / PAGE_SIZE));
   const dashboardRows = dashboardMovements.slice((dashboardPage - 1) * PAGE_SIZE, dashboardPage * PAGE_SIZE);
@@ -300,7 +295,7 @@ function App() {
               </article>
             </div>
             {!loading && <ExpenseCharts movements={dashboardMovements} />}
-            <div className="table-heading"><h2>Movimientos</h2><label>Filtrar categoría <select value={dashboardFilter} onChange={(event) => { setDashboardFilter(event.target.value); setDashboardPage(1); }}><option value="">Todas</option>{categoryNames.map((category) => <option key={category}>{category}</option>)}</select></label></div>
+            <div className="table-heading"><h2>Movimientos</h2></div>
             {loading ? (
               <p>Cargando…</p>
             ) : (
@@ -320,7 +315,7 @@ function App() {
               <button className={categorizePage === "categories" ? "active" : ""} onClick={() => setCategorizePage("categories")}>Categorías</button>
             </nav>
             {categorizePage === "movements" ? <>
-              <div className="table-heading"><h2>Modificar categorías</h2><label>Filtrar categoría <select value={categorizeFilter} onChange={(event) => { setCategorizeFilter(event.target.value); setCategorizeMovementsPage(1); }}><option value="">Todas</option>{categoryNames.map((category) => <option key={category}>{category}</option>)}</select></label></div>
+              <div className="table-heading"><h2>Modificar categorías</h2></div>
               {loading ? <p>Cargando…</p> : <MovementsTable
                 movements={categorizeRows}
                 categories={categoryNames}
