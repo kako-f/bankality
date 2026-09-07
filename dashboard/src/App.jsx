@@ -289,8 +289,6 @@ function App() {
       setMovements((current) => current.map((movement) => (
         movement.id === updated.id ? { ...movement, category: updated.category } : movement
       )));
-      setDashboardPage(1);
-      setCategorizeMovementsPage(1);
     } catch (error) {
       setMessage(error.message);
     }
