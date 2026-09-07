@@ -63,6 +63,24 @@
     padding-bottom: 1.25rem;
 }
 
+.topbar-actions {
+    align-items: center;
+    display: flex;
+    gap: .75rem;
+}
+
+.theme-toggle {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    color: var(--text);
+    font-size: .85rem;
+    padding: .45rem .75rem;
+}
+
+.theme-toggle:hover {
+    background: var(--surface);
+}
+
 .eyebrow {
     color: #9aabba;
     font-size: .75rem;
@@ -415,3 +433,26 @@ form button {
         grid-template-columns: 1fr;
     }
 }
+
+/* Theme tokens keep both palettes consistent without changing layout rules. */
+.sidebar { background: var(--sidebar); }
+.brand { border-color: var(--border); color: var(--text); }
+.brand small, .side-nav button, .eyebrow, .table-heading label, .chart-empty,
+article span, .pagination span, .import p { color: var(--muted); }
+.side-nav button.active, .side-nav button:hover { background: var(--accent-strong); color: #fff; }
+.main-content { background: var(--bg); }
+.topbar { border-color: var(--border); }
+h1, h2, article strong { color: var(--text); }
+.local-status { background: var(--accent-strong); color: #c6f3d5; }
+.cards article, .panel, .import, .chart-panel { background: var(--surface); box-shadow: 0 2px 7px var(--shadow); }
+.cards article { border-left-color: var(--accent); }
+.cards article:nth-child(2) { border-color: var(--accent); }
+.cards article:nth-child(3) { border-color: var(--danger); }
+th, td { border-color: var(--border); color: var(--text); }
+th, .sort-button { color: var(--muted); }
+.sort-button:hover { color: var(--text); }
+.credit { color: var(--accent); }
+.debit { color: var(--danger); }
+select, input, .category-form input, .category-row input { background: var(--input); border-color: var(--border); color: var(--text); }
+form button, .pagination button, .subnav button, .category-form button, .category-row button { background: var(--accent); }
+.subnav button.active { background: var(--accent-strong); }

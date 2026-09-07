@@ -80,12 +80,12 @@ function Pagination({ page, pages, setPage }) {
 function ExpenseCharts({ movements }) {
   const categoryTotals = expensesByCategory(movements);
   const monthTotals = expensesByMonth(movements);
-  const chartText = { fill: "#b8c7d3" };
+  const chartText = { fill: "var(--muted)" };
   const chartSx = {
     "& .MuiChartsAxis-tickLabel": chartText,
     "& .MuiChartsAxis-label": chartText,
     "& .MuiChartsLegend-label": chartText,
-    "& .MuiChartsAxis-line, & .MuiChartsAxis-tick": { stroke: "#62788c" },
+    "& .MuiChartsAxis-line, & .MuiChartsAxis-tick": { stroke: "var(--border)" },
   };
 
   return <div className="charts" aria-label="Gráficos de gastos">
@@ -96,7 +96,7 @@ function ExpenseCharts({ movements }) {
         height={Math.max(250, categoryTotals.length * 54)}
         xAxis={[{ valueFormatter: (value) => pesos.format(value) }]}
         yAxis={[{ scaleType: "band", data: categoryTotals.map(({ label }) => label) }]}
-        series={[{ data: categoryTotals.map(({ total }) => total), label: "Gastos", color: "#dd4b39" }]}
+        series={[{ data: categoryTotals.map(({ total }) => total), label: "Gastos", color: "var(--danger)" }]}
         margin={{ left: 110, right: 20, top: 20, bottom: 45 }}
         sx={chartSx}
       /> : <p className="chart-empty">No hay gastos para mostrar.</p>}
@@ -106,7 +106,7 @@ function ExpenseCharts({ movements }) {
       {monthTotals.length ? <LineChart
         height={300}
         xAxis={[{ scaleType: "point", data: monthTotals.map(({ label }) => label) }]}
-        series={[{ data: monthTotals.map(({ total }) => total), label: "Gastos", color: "#3c8dbc", area: true, showMark: true }]}
+        series={[{ data: monthTotals.map(({ total }) => total), label: "Gastos", color: "var(--accent)", area: true, showMark: true }]}
         yAxis={[{ valueFormatter: (value) => pesos.format(value) }]}
         margin={{ left: 75, right: 20, top: 20, bottom: 45 }}
         sx={chartSx}
@@ -116,6 +116,10 @@ function ExpenseCharts({ movements }) {
 }
 
 function App() {
+  const [theme, setTheme] = useState(() => {
+    if (typeof localStorage === "undefined") return "dark";
+    return localStorage.getItem("bankality-theme") || "dark";
+  });
   const [section, setSection] = useState("dashboard");
   const [categorizePage, setCategorizePage] = useState("movements");
   const [movements, setMovements] = useState([]);
@@ -132,6 +136,11 @@ function App() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [categoryEdits, setCategoryEdits] = useState({});
   const [replacementIds, setReplacementIds] = useState({});
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    localStorage.setItem("bankality-theme", theme);
+  }, [theme]);
 
   async function refreshCategories() {
     const nextCategories = await loadCategories();
@@ -285,7 +294,12 @@ function App() {
             <p className="eyebrow">Movimientos bancarios</p>
             <h1>{section === "dashboard" ? "Dashboard" : section === "categorize" ? "Categorizar" : "Importar"}</h1>
           </div>
-          <span className="local-status">Django local</span>
+          <div className="topbar-actions">
+            <button className="theme-toggle" type="button" onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}>
+              {theme === "dark" ? "☀ Tema claro" : "☾ Tema oscuro"}
+            </button>
+            <span className="local-status">Django local</span>
+          </div>
         </header>
         {message && <p className="notice">{message}</p>}
         {section === "dashboard" ? (
