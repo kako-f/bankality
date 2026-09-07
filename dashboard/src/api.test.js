@@ -132,6 +132,18 @@ test('filters movement rows by each table column', () => {
   assert.deepEqual(filterMovementRows(movements, { description: 'super', amountMin: -30000, balanceMax: 999000 }), [movements[1]])
 })
 
+test('filters rows beyond the first 25-row page', () => {
+  const movements = Array.from({ length: 26 }, (_, index) => ({
+    date: '2026-09-02',
+    description: index === 25 ? 'Arriendo mensual' : `Compra ${index}`,
+    category: index === 25 ? 'Arriendo' : 'Compras',
+    amount: -1000,
+    balance: 100000,
+  }))
+
+  assert.deepEqual(filterMovementRows(movements, { description: 'arriendo' }), [movements[25]])
+})
+
 test('aggregates expenses by category and ignores credits', () => {
   assert.deepEqual(expensesByCategory([
     { amount: -400000, category: 'Arriendo' },
