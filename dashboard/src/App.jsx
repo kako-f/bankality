@@ -7,6 +7,7 @@ import {
   loadCategories,
   loadMovements,
   previewFiles,
+  resetData,
   renameCategory,
   updateCategory,
 } from "./api.js";
@@ -243,6 +244,23 @@ function App() {
     }
   }
 
+  async function resetAllData() {
+    if (!window.confirm("¿Borrar todos los movimientos y categorías? Esta acción no se puede deshacer.")) return;
+    setLoading(true);
+    try {
+      const result = await resetData();
+      setFiles([]);
+      setPreview(null);
+      await refresh();
+      setMessage(`Datos reiniciados: ${result.deleted_movements} movimientos y ${result.deleted_categories} categorías eliminados.`);
+      setMessageKind("success");
+    } catch (error) {
+      setMessage(error.message);
+      setMessageKind("error");
+      setLoading(false);
+    }
+  }
+
   async function changeCategory(item, category) {
     try {
       const updated = await updateCategory(item.id, category);
@@ -417,6 +435,8 @@ function App() {
                 Importar {files.length ? `(${files.length})` : ""}
               </button>
             </form>
+            <button className="reset-button" type="button" disabled={loading || previewLoading} onClick={resetAllData}>Reiniciar datos</button>
+            <p className="reset-warning">Borra todos los movimientos y categorías.</p>
             {previewLoading && <p>Generando previsualización…</p>}
             {preview?.files.map((file) => <div className="preview" key={file.name}>
               <h3>{file.name}</h3>

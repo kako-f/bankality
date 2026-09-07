@@ -309,6 +309,20 @@ input {
     color: var(--danger) !important;
 }
 
+.reset-button {
+    background: var(--danger);
+    border-radius: .35rem;
+    color: #fff;
+    font-weight: 700;
+    margin-top: 1.5rem;
+}
+
+.reset-warning {
+    color: var(--danger) !important;
+    font-size: .8rem;
+    margin: .4rem 0 0;
+}
+
 .import p {
     color: #b8c7d3;
 }

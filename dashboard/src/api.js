@@ -13,6 +13,10 @@ export const loadMovements = () => request('/api/movements')
 
 export const loadCategories = () => request('/api/categories')
 
+export const resetData = () => request('/api/data/reset', {
+  method: 'DELETE', headers: csrfHeaders(),
+})
+
 export const createCategory = (name) => request('/api/categories', {
   method: 'POST', headers: { 'Content-Type': 'application/json', ...csrfHeaders() }, body: JSON.stringify({ name }),
 })

@@ -14,6 +14,21 @@ from movements.views import update_category
 
 
 class MovementApiTests(TestCase):
+    def test_resets_movements_and_categories(self):
+        Category.objects.create(name='Temporal')
+        category_count = Category.objects.count()
+        Movement.objects.create(
+            date='2026-09-02', description='Compra', amount=-2200,
+            balance=10, category='Temporal', fingerprint='reset-me',
+        )
+
+        response = self.client.delete('/api/data/reset')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'deleted_movements': 1, 'deleted_categories': category_count})
+        self.assertEqual(Movement.objects.count(), 0)
+        self.assertEqual(Category.objects.count(), 0)
+
     def test_previews_import_rows_without_storing_them(self):
         record = {
             'date': date(2026, 9, 4), 'description': 'Compra', 'amount': -2200,

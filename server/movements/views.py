@@ -43,6 +43,17 @@ def list_movements(request):
     return JsonResponse(movements, safe=False)
 
 
+def reset_data(request):
+    if request.method != 'DELETE':
+        return JsonResponse({'error': 'Usa DELETE para reiniciar los datos'}, status=405)
+    with transaction.atomic():
+        movements = Movement.objects.count()
+        categories = Category.objects.count()
+        Movement.objects.all().delete()
+        Category.objects.all().delete()
+    return JsonResponse({'deleted_movements': movements, 'deleted_categories': categories})
+
+
 def update_category(request, movement_id):
     if request.method != 'PATCH':
         return JsonResponse({'error': 'Usa PATCH para actualizar una categoría'}, status=405)

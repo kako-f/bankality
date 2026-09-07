@@ -35,6 +35,22 @@ test('previews selected files through the preview endpoint', async () => {
   globalThis.document = originalDocument
 })
 
+test('resets imported data with csrf protection', async () => {
+  const originalFetch = globalThis.fetch
+  const originalDocument = globalThis.document
+  globalThis.document = { cookie: 'csrftoken=local-token' }
+  globalThis.fetch = async (url, options) => {
+    assert.equal(url, '/api/data/reset')
+    assert.equal(options.method, 'DELETE')
+    assert.equal(options.headers['X-CSRFToken'], 'local-token')
+    return new Response('{"deleted_movements":2,"deleted_categories":3}', { headers: { 'Content-Type': 'application/json' } })
+  }
+
+  assert.deepEqual(await api.resetData(), { deleted_movements: 2, deleted_categories: 3 })
+  globalThis.fetch = originalFetch
+  globalThis.document = originalDocument
+})
+
 test('sends a category choice to its movement', async () => {
   assert.equal(typeof api.updateCategory, 'function')
   const originalFetch = globalThis.fetch
