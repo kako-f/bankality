@@ -11,6 +11,8 @@ import {
 } from "./api.js";
 import { filterMovements } from "./filters.js";
 import { expensesByCategory, expensesByMonth } from "./chartData.js";
+import { BarChart } from "@mui/x-charts/BarChart";
+import { LineChart } from "@mui/x-charts/LineChart";
 
 const pesos = new Intl.NumberFormat("es-CL", {
   style: "currency",
@@ -47,29 +49,37 @@ function Pagination({ page, pages, setPage }) {
 function ExpenseCharts({ movements }) {
   const categoryTotals = expensesByCategory(movements);
   const monthTotals = expensesByMonth(movements);
-  const categoryMax = categoryTotals[0]?.total || 1;
-  const monthMax = Math.max(...monthTotals.map(({ total }) => total), 1);
-  const formatMonth = (label) => label.replace(".", "");
+  const chartText = { fill: "#b8c7d3" };
+  const chartSx = {
+    "& .MuiChartsAxis-tickLabel": chartText,
+    "& .MuiChartsAxis-label": chartText,
+    "& .MuiChartsLegend-label": chartText,
+    "& .MuiChartsAxis-line, & .MuiChartsAxis-tick": { stroke: "#62788c" },
+  };
 
   return <div className="charts" aria-label="Gráficos de gastos">
     <article className="chart-panel">
       <h2>Gastos por categoría</h2>
-      {categoryTotals.length ? <div className="chart-bars">
-        {categoryTotals.map(({ label, total }) => <div className="chart-row" key={label}>
-          <div className="chart-label"><span>{label}</span><strong>{pesos.format(total)}</strong></div>
-          <div className="chart-track"><span style={{ width: `${(total / categoryMax) * 100}%` }} /></div>
-        </div>)}
-      </div> : <p className="chart-empty">No hay gastos para mostrar.</p>}
+      {categoryTotals.length ? <BarChart
+        layout="horizontal"
+        height={Math.max(250, categoryTotals.length * 54)}
+        xAxis={[{ valueFormatter: (value) => pesos.format(value) }]}
+        yAxis={[{ scaleType: "band", data: categoryTotals.map(({ label }) => label) }]}
+        series={[{ data: categoryTotals.map(({ total }) => total), label: "Gastos", color: "#dd4b39" }]}
+        margin={{ left: 110, right: 20, top: 20, bottom: 45 }}
+        sx={chartSx}
+      /> : <p className="chart-empty">No hay gastos para mostrar.</p>}
     </article>
     <article className="chart-panel">
       <h2>Evolución mensual</h2>
-      {monthTotals.length ? <div className="month-chart">
-        {monthTotals.map(({ label, total }) => <div className="month-column" key={label}>
-          <strong>{pesos.format(total)}</strong>
-          <div className="month-track"><span style={{ height: `${(total / monthMax) * 100}%` }} /></div>
-          <span>{formatMonth(label)}</span>
-        </div>)}
-      </div> : <p className="chart-empty">No hay gastos para mostrar.</p>}
+      {monthTotals.length ? <LineChart
+        height={300}
+        xAxis={[{ scaleType: "point", data: monthTotals.map(({ label }) => label) }]}
+        series={[{ data: monthTotals.map(({ total }) => total), label: "Gastos", color: "#3c8dbc", area: true, showMark: true }]}
+        yAxis={[{ valueFormatter: (value) => pesos.format(value) }]}
+        margin={{ left: 75, right: 20, top: 20, bottom: 45 }}
+        sx={chartSx}
+      /> : <p className="chart-empty">No hay gastos para mostrar.</p>}
     </article>
   </div>;
 }
