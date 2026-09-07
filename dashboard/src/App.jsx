@@ -6,6 +6,7 @@ import {
   importFiles,
   loadCategories,
   loadMovements,
+  previewFiles,
   renameCategory,
   updateCategory,
 } from "./api.js";
@@ -126,6 +127,8 @@ function App() {
   const [movements, setMovements] = useState([]);
   const [categories, setCategories] = useState([]);
   const [files, setFiles] = useState([]);
+  const [preview, setPreview] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [dashboardPage, setDashboardPage] = useState(1);
@@ -222,6 +225,21 @@ function App() {
     } catch (error) {
       setMessage(error.message);
       setLoading(false);
+    }
+  }
+
+  async function selectFiles(event) {
+    const nextFiles = [...event.target.files];
+    setFiles(nextFiles);
+    setPreview(null);
+    if (!nextFiles.length) return;
+    setPreviewLoading(true);
+    try {
+      setPreview(await previewFiles(nextFiles));
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setPreviewLoading(false);
     }
   }
 
@@ -393,12 +411,23 @@ function App() {
                 type="file"
                 accept=".pdf,.xls"
                 multiple
-                onChange={(event) => setFiles([...event.target.files])}
+                onChange={selectFiles}
               />
-              <button disabled={!files.length || loading}>
+              <button disabled={!files.length || loading || previewLoading}>
                 Importar {files.length ? `(${files.length})` : ""}
               </button>
             </form>
+            {previewLoading && <p>Generando previsualización…</p>}
+            {preview?.files.map((file) => <div className="preview" key={file.name}>
+              <h3>{file.name}</h3>
+              {file.error ? <p className="preview-error">{file.error}</p> : <>
+                <p>{file.total} movimiento{file.total === 1 ? "" : "s"} detectado{file.total === 1 ? "" : "s"}{file.total > file.rows.length ? ` · mostrando los primeros ${file.rows.length}` : ""}.</p>
+                <div className="panel"><table>
+                  <thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Monto</th><th>Saldo</th></tr></thead>
+                  <tbody>{file.rows.map((row, index) => <tr key={`${file.name}-${index}`}><td>{row.date}</td><td>{row.description}</td><td>{row.category}</td><td>{pesos.format(row.amount)}</td><td>{pesos.format(row.balance)}</td></tr>)}</tbody>
+                </table></div>
+              </>}
+            </div>)}
           </section>
         )}
       </main>

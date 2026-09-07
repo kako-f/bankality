@@ -1,10 +1,12 @@
 import json
 from concurrent.futures import ThreadPoolExecutor
+from datetime import date
 from threading import Event
 from unittest.mock import patch
 
 from django.db import OperationalError, connections, transaction
 from django.shortcuts import get_object_or_404
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, RequestFactory, TestCase, TransactionTestCase
 
 from movements.models import Category, Movement
@@ -12,6 +14,21 @@ from movements.views import update_category
 
 
 class MovementApiTests(TestCase):
+    def test_previews_import_rows_without_storing_them(self):
+        record = {
+            'date': date(2026, 9, 4), 'description': 'Compra', 'amount': -2200,
+            'balance': 10000, 'category': 'Compras',
+        }
+        upload = SimpleUploadedFile('movements.xls', b'fixture')
+        with patch('movements.views.parse_xls', return_value=[record]):
+            response = self.client.post('/api/imports/preview', {'files': upload})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['files'][0]['total'], 1)
+        self.assertEqual(response.json()['files'][0]['rows'][0]['date'], '2026-09-04')
+        self.assertEqual(response.json()['files'][0]['rows'][0]['description'], 'Compra')
+        self.assertEqual(Movement.objects.count(), 0)
+
     def test_lists_canonical_categories_without_rewriting_historical_movements(self):
         movement = Movement.objects.create(
             date='2026-09-02', description='Compra', amount=-2200,

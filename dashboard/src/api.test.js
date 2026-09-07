@@ -18,6 +18,23 @@ test('turns a failed import response into an error', async () => {
   globalThis.document = originalDocument
 })
 
+test('previews selected files through the preview endpoint', async () => {
+  const originalFetch = globalThis.fetch
+  const originalDocument = globalThis.document
+  globalThis.document = { cookie: 'csrftoken=local-token' }
+  globalThis.fetch = async (url, options) => {
+    assert.equal(url, '/api/imports/preview')
+    assert.equal(options.method, 'POST')
+    assert.equal(options.headers['X-CSRFToken'], 'local-token')
+    return new Response('{"files":[]}', { headers: { 'Content-Type': 'application/json' } })
+  }
+
+  const result = await api.previewFiles([new File(['fixture'], 'movements.xls')])
+  assert.deepEqual(result, { files: [] })
+  globalThis.fetch = originalFetch
+  globalThis.document = originalDocument
+})
+
 test('sends a category choice to its movement', async () => {
   assert.equal(typeof api.updateCategory, 'function')
   const originalFetch = globalThis.fetch

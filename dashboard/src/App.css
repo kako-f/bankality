@@ -296,6 +296,19 @@ input {
     max-width: 650px;
 }
 
+.preview {
+    margin-top: 1.5rem;
+}
+
+.preview h3 {
+    color: var(--text);
+    margin-bottom: .5rem;
+}
+
+.preview-error {
+    color: var(--danger) !important;
+}
+
 .import p {
     color: #b8c7d3;
 }

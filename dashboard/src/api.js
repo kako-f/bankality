@@ -34,3 +34,9 @@ export function importFiles(files) {
   for (const file of files) body.append('files', file)
   return request('/api/imports', { method: 'POST', headers: csrfHeaders(), body })
 }
+
+export function previewFiles(files) {
+  const body = new FormData()
+  for (const file of files) body.append('files', file)
+  return request('/api/imports/preview', { method: 'POST', headers: csrfHeaders(), body })
+}

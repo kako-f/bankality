@@ -113,16 +113,37 @@ def category_detail(request, category_id):
     return JsonResponse({'deleted': deleted})
 
 
+def parse_upload(upload):
+    parser = parse_xls if upload.name.lower().endswith('.xls') else parse_pdf if upload.name.lower().endswith('.pdf') else None
+    if parser is None:
+        raise ValueError('Formato no reconocido')
+    return parser(upload)
+
+
+def preview_imports(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Usa POST para previsualizar archivos'}, status=405)
+    results = []
+    for upload in request.FILES.getlist('files'):
+        try:
+            records = parse_upload(upload)
+            rows = [
+                {**record, 'date': record['date'].isoformat()}
+                for record in records[:100]
+            ]
+            results.append({'name': upload.name, 'total': len(records), 'rows': rows, 'error': ''})
+        except ValueError as error:
+            results.append({'name': upload.name, 'total': 0, 'rows': [], 'error': str(error)})
+    return JsonResponse({'files': results})
+
+
 def import_movements(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Usa POST para importar archivos'}, status=405)
     results = []
     for upload in request.FILES.getlist('files'):
         try:
-            parser = parse_xls if upload.name.lower().endswith('.xls') else parse_pdf if upload.name.lower().endswith('.pdf') else None
-            if parser is None:
-                raise ValueError('Formato no reconocido')
-            imported, skipped = store_records(parser(upload))
+            imported, skipped = store_records(parse_upload(upload))
             results.append({'name': upload.name, 'imported': imported, 'skipped': skipped, 'error': ''})
         except ValueError as error:
             results.append({'name': upload.name, 'imported': 0, 'skipped': 0, 'error': str(error)})
