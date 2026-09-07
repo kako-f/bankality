@@ -7,7 +7,6 @@ import {
 import { filterMovementRows, sortMovementRows } from "./filters.js";
 import { EMPTY_TABLE_FILTERS, PAGE_SIZE, pesos } from "./formatters.js";
 import CategoryManager from "./components/CategoryManager.jsx";
-import ExpenseCharts from "./components/ExpenseCharts.jsx";
 import ImportSection from "./components/ImportSection.jsx";
 import MovementsTable from "./components/MovementsTable.jsx";
 import Pagination from "./components/Pagination.jsx";
@@ -19,7 +18,6 @@ function App() {
   const [theme, setTheme] = useState(() => typeof localStorage === "undefined" ? "dark" : localStorage.getItem("bankality-theme") || "dark");
   const [section, setSection] = useState("dashboard");
   const [categorizePage, setCategorizePage] = useState("movements");
-  const [analysisDateFilters, setAnalysisDateFilters] = useState({ dateFrom: "", dateTo: "" });
   const [movements, setMovements] = useState([]);
   const [categories, setCategories] = useState([]);
   const [files, setFiles] = useState([]);
@@ -72,7 +70,6 @@ function App() {
   const categoryNames = useMemo(() => categories.map((category) => category.name), [categories]);
   const dashboardMovements = useMemo(() => sortMovementRows(filterMovementRows(movements, dashboardTableFilters), dashboardSort), [movements, dashboardTableFilters, dashboardSort]);
   const categorizeMovements = useMemo(() => sortMovementRows(filterMovementRows(movements, categorizeTableFilters), categorizeSort), [movements, categorizeTableFilters, categorizeSort]);
-  const analysisMovements = useMemo(() => filterMovementRows(movements, analysisDateFilters), [movements, analysisDateFilters]);
   const dashboardPages = Math.max(1, Math.ceil(dashboardMovements.length / PAGE_SIZE));
   const categorizePages = Math.max(1, Math.ceil(categorizeMovements.length / PAGE_SIZE));
   const dashboardRows = dashboardMovements.slice((dashboardPage - 1) * PAGE_SIZE, dashboardPage * PAGE_SIZE);
@@ -134,7 +131,7 @@ function App() {
 
   const setTableFilter = (setter, pageSetter) => (nextFilters) => { setter(nextFilters); pageSetter(1); };
   const toggleSort = (setter, pageSetter) => (field) => { setter((current) => ({ field, direction: current.field === field && current.direction === "asc" ? "desc" : "asc" })); pageSetter(1); };
-  const title = { dashboard: "Dashboard", categorize: "Categorizar", analysis: "Análisis", import: "Importar" }[section];
+  const title = { dashboard: "Dashboard", categorize: "Categorizar", import: "Importar" }[section];
 
   return <div className="app-shell">
     <Sidebar section={section} onSectionChange={setSection} />
@@ -146,10 +143,6 @@ function App() {
         <div className="table-heading"><h2>Movimientos</h2></div><Pagination page={dashboardPage} pages={dashboardPages} setPage={setDashboardPage} /><br />
         {loading ? <p>Cargando…</p> : <MovementsTable movements={dashboardRows} categories={categoryNames} filters={dashboardTableFilters} onFilterChange={setTableFilter(setDashboardTableFilters, setDashboardPage)} sort={dashboardSort} onSort={toggleSort(setDashboardSort, setDashboardPage)} />}
         <Pagination page={dashboardPage} pages={dashboardPages} setPage={setDashboardPage} />
-      </section>}
-      {section === "analysis" && <section>
-        <div className="table-heading"><h2>Gastos</h2><div className="analysis-filters"><label>Desde <input type="date" value={analysisDateFilters.dateFrom} onChange={(event) => setAnalysisDateFilters((current) => ({ ...current, dateFrom: event.target.value }))} /></label><label>Hasta <input type="date" value={analysisDateFilters.dateTo} onChange={(event) => setAnalysisDateFilters((current) => ({ ...current, dateTo: event.target.value }))} /></label></div></div>
-        {loading ? <p>Cargando…</p> : <ExpenseCharts movements={analysisMovements} categories={categoryNames} />}
       </section>}
       {section === "categorize" && <section>
         <nav className="subnav" aria-label="Categorizar"><button className={categorizePage === "movements" ? "active" : ""} onClick={() => setCategorizePage("movements")}>Movimientos</button><button className={categorizePage === "categories" ? "active" : ""} onClick={() => setCategorizePage("categories")}>Categorías</button></nav>

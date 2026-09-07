@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as api from './api.js'
-import { expensesByCategory, expensesByMonth, movementsByCategory, movementsByMonth } from './chartData.js'
 import { filterMovementRows, filterMovements, sortMovementRows } from './filters.js'
 
 test('turns a failed import response into an error', async () => {
@@ -199,47 +198,4 @@ test('sorts date, category, and description in both directions', () => {
   assert.deepEqual(sortMovementRows(movements, { field: 'date', direction: 'asc' }).map(({ date }) => date), ['2026-09-02', '2026-09-03', '2026-09-04'])
   assert.deepEqual(sortMovementRows(movements, { field: 'category', direction: 'asc' }).map(({ category }) => category), ['Arriendo', 'Bancos', 'Comida'])
   assert.deepEqual(sortMovementRows(movements, { field: 'description', direction: 'desc' }).map(({ description }) => description), ['Zeta', 'Beta', 'Alfa'])
-})
-
-test('aggregates expenses by category and ignores credits', () => {
-  assert.deepEqual(expensesByCategory([
-    { amount: -400000, category: 'Arriendo' },
-    { amount: -2000, category: 'Comida' },
-    { amount: -3000, category: 'Comida' },
-    { amount: 100000, category: 'Sueldo' },
-  ]), [
-    { label: 'Arriendo', total: 400000 },
-    { label: 'Comida', total: 5000 },
-  ])
-})
-
-test('aggregates incomes and expenses by category', () => {
-  assert.deepEqual(movementsByCategory([
-    { amount: 1957159, category: 'Remuneración' },
-    { amount: 100000, category: 'Transferencias recibidas' },
-    { amount: -400000, category: 'Arriendo' },
-  ]), [
-    { label: 'Remuneración', total: 1957159 },
-    { label: 'Arriendo', total: -400000 },
-    { label: 'Transferencias recibidas', total: 100000 },
-  ])
-})
-
-test('aggregates expenses by month in chronological order', () => {
-  assert.deepEqual(expensesByMonth([
-    { date: '2026-10-03', amount: -2000 },
-    { date: '2026-09-30', amount: -3000 },
-    { date: '2026-10-01', amount: 1000 },
-  ]).map(({ total }) => total), [3000, 2000])
-})
-
-test('aggregates incomes and expenses by month', () => {
-  assert.deepEqual(movementsByMonth([
-    { date: '2026-09-30', amount: -3000 },
-    { date: '2026-09-02', amount: 10000 },
-    { date: '2026-10-01', amount: 5000 },
-  ]).map(({ income, expenses }) => ({ income, expenses })), [
-    { income: 10000, expenses: 3000 },
-    { income: 5000, expenses: 0 },
-  ])
 })

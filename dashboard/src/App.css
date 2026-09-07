@@ -121,21 +121,6 @@ h2 {
     margin-left: .5rem;
 }
 
-.analysis-filters {
-    align-items: center;
-    display: flex;
-    gap: .75rem;
-}
-
-.analysis-filters label {
-    color: var(--muted);
-    font-size: .85rem;
-}
-
-.analysis-filters input {
-    margin-left: .35rem;
-}
-
 .local-status {
     background: #274f3a;
     border-radius: 999px;
@@ -184,54 +169,6 @@ button:disabled {
 
 .cards article:nth-child(3) {
     border-color: #dd4b39;
-}
-
-.charts {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: minmax(0, 1fr);
-    margin-bottom: 1.5rem;
-}
-
-.chart-panel {
-    background: #34495e;
-    border-radius: .45rem;
-    box-shadow: 0 2px 7px #17223055;
-    min-width: 0;
-    padding: 1.2rem;
-}
-
-.chart-panel h2 {
-    font-size: 1rem;
-}
-
-.chart-empty {
-    color: #b8c7d3;
-    margin: 0;
-}
-
-.category-summary {
-    border-top: 1px solid var(--border);
-    display: grid;
-    gap: .35rem 1.5rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    margin-top: .5rem;
-    padding-top: .75rem;
-}
-
-.category-summary div {
-    align-items: center;
-    color: var(--muted);
-    display: flex;
-    font-size: .85rem;
-    gap: .75rem;
-    justify-content: space-between;
-}
-
-.category-summary strong {
-    color: var(--text);
-    font-size: .8rem;
-    white-space: nowrap;
 }
 
 article span {
@@ -499,19 +436,7 @@ form button {
         flex-direction: column;
     }
 
-    .analysis-filters {
-        flex-wrap: wrap;
-    }
-
-    .category-summary {
-        grid-template-columns: 1fr;
-    }
-
     .cards {
-        grid-template-columns: 1fr;
-    }
-
-    .charts {
         grid-template-columns: 1fr;
     }
 
@@ -528,14 +453,14 @@ form button {
 /* Theme tokens keep both palettes consistent without changing layout rules. */
 .sidebar { background: var(--sidebar); }
 .brand { border-color: var(--border); color: var(--text); }
-.brand small, .side-nav button, .eyebrow, .table-heading label, .chart-empty,
+.brand small, .side-nav button, .eyebrow, .table-heading label,
 article span, .pagination span, .import p { color: var(--muted); }
 .side-nav button.active, .side-nav button:hover { background: var(--accent-strong); color: #fff; }
 .main-content { background: var(--bg); }
 .topbar { border-color: var(--border); }
 h1, h2, article strong { color: var(--text); }
 .local-status { background: var(--accent-strong); color: #c6f3d5; }
-.cards article, .panel, .import, .chart-panel { background: var(--surface); box-shadow: 0 2px 7px var(--shadow); }
+.cards article, .panel, .import { background: var(--surface); box-shadow: 0 2px 7px var(--shadow); }
 .cards article { border-left-color: var(--accent); }
 .cards article:nth-child(2) { border-color: var(--accent); }
 .cards article:nth-child(3) { border-color: var(--danger); }
