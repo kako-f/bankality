@@ -334,6 +334,18 @@ form button {
     padding: .8rem 1rem;
 }
 
+.notice.success {
+    background: #1d5a3a;
+    border-color: var(--accent);
+    color: #d8f7e2;
+}
+
+.notice.error {
+    background: #652c2b;
+    border-color: var(--danger);
+    color: #ffe0dc;
+}
+
 .pagination {
     align-items: center;
     display: flex;

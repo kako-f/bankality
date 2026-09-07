@@ -130,6 +130,7 @@ function App() {
   const [preview, setPreview] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageKind, setMessageKind] = useState("info");
   const [loading, setLoading] = useState(true);
   const [dashboardPage, setDashboardPage] = useState(1);
   const [categorizeMovementsPage, setCategorizeMovementsPage] = useState(1);
@@ -211,19 +212,17 @@ function App() {
     setLoading(true);
     try {
       const result = await importFiles(files);
-      setMessage(
-        result.files
-          .map(
-            (file) =>
-              file.error ||
-              `${file.name}: ${file.imported} importados, ${file.skipped} omitidos`,
-          )
-          .join(" · "),
-      );
       setFiles([]);
+      setPreview(null);
       await refresh();
+      const imported = result.files.reduce((total, file) => total + (file.imported || 0), 0);
+      const skipped = result.files.reduce((total, file) => total + (file.skipped || 0), 0);
+      const errors = result.files.filter((file) => file.error);
+      setMessage(`Importación completada: ${imported} importados, ${skipped} omitidos${errors.length ? ` · Errores: ${errors.map((file) => `${file.name}: ${file.error}`).join("; ")}` : ""}.`);
+      setMessageKind(errors.length && !imported ? "error" : "success");
     } catch (error) {
       setMessage(error.message);
+      setMessageKind("error");
       setLoading(false);
     }
   }
@@ -238,6 +237,7 @@ function App() {
       setPreview(await previewFiles(nextFiles));
     } catch (error) {
       setMessage(error.message);
+      setMessageKind("error");
     } finally {
       setPreviewLoading(false);
     }
@@ -325,7 +325,7 @@ function App() {
             <span className="local-status">Django local</span>
           </div>
         </header>
-        {message && <p className="notice">{message}</p>}
+        {message && <p className={`notice ${messageKind}`}>{message}</p>}
         {section === "dashboard" ? (
           <section>
             <div className="cards">
