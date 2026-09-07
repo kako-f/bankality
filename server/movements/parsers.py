@@ -11,7 +11,7 @@ import openpyxl
 def category(description, amount):
     text = description.upper()
     if 'TRANSFER' in text or 'TRASPASO' in text:
-        return 'Transferencias'
+        return 'Transferencias recibidas' if amount > 0 else 'Transferencias enviadas'
     if amount > 0:
         if 'REMUNERACION' in text:
             return 'Remuneración'

@@ -16,7 +16,8 @@ class ParserTests(SimpleTestCase):
             ('Traspaso enviado', -100),
         ):
             with self.subTest(description=description):
-                self.assertEqual(category(description, amount), 'Transferencias')
+                expected = 'Transferencias recibidas' if amount > 0 else 'Transferencias enviadas'
+                self.assertEqual(category(description, amount), expected)
 
     def test_parses_bci_last_movements_rows(self):
         rows = [
