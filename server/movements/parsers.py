@@ -12,7 +12,7 @@ def category(description, amount):
     text = description.upper()
     if 'TRANSFER' in text or 'TRASPASO' in text:
         return 'Transferencias recibidas' if amount > 0 else 'Transferencias enviadas'
-    if 'CONCESION ALIMENT' in text:
+    if any(term in text for term in ('CONCESION ALIMENT', 'LA TERESA')):
         return 'Cafes/Negocio'
     if amount > 0:
         if 'REMUNERACION' in text:
