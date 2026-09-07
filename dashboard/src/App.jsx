@@ -25,7 +25,7 @@ const CATEGORY_CHART_MARGIN = Object.freeze({
   left: 75,
   right: 25,
   top: 25,
-  bottom: 155,
+  bottom: 50,
 });
 const MONTH_CHART_MARGIN = Object.freeze({
   left: 85,
@@ -344,7 +344,7 @@ function ExpenseCharts({ movements, categories = [] }) {
         <h2>Movimientos por categoría</h2>
         {categoryTotals.length ? (
           <BarChart
-            height={440}
+            height={550}
             xAxis={categoryXAxis}
             yAxis={categoryYAxis}
             series={categorySeries}
@@ -353,6 +353,15 @@ function ExpenseCharts({ movements, categories = [] }) {
           />
         ) : (
           <p className="chart-empty">No hay movimientos para mostrar.</p>
+        )}
+        {categoryTotals.length > 0 && (
+          <div
+            className="category-axis-labels"
+            aria-label="Categorías del eje X"
+            style={{ gridTemplateColumns: `repeat(${categoryLabels.length}, minmax(0, 1fr))` }}
+          >
+            {categoryLabels.map((label) => <span key={label}>{label}</span>)}
+          </div>
         )}
         {categoryTotals.length > 0 && (
           <div
