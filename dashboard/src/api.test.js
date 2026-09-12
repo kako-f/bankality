@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import * as api from './api.js'
-import { filterMovementRows, filterMovements, sortMovementRows } from './filters.js'
+import { categoryTotals, filterMovementRows, filterMovements, sortMovementRows } from './filters.js'
 
 test('turns a failed import response into an error', async () => {
   const originalFetch = globalThis.fetch
@@ -153,6 +153,31 @@ test('filters padded historical categories by their canonical catalog name', asy
   const rent = { id: 1, category: ' \tArriendo\u00a0 ' }
 
   assert.deepEqual(filterMovements([rent], 'Arriendo'), [rent])
+})
+
+test('totals income and expenses in the selected month by category', () => {
+  const movements = [
+    { date: '2026-09-02', category: 'Comida', amount: -15000 },
+    { date: '2026-09-04', category: 'Comida', amount: -5000 },
+    { date: '2026-09-05', category: 'Remuneración', amount: 800000 },
+    { date: '2026-08-30', category: 'Arriendo', amount: -400000 },
+  ]
+
+  assert.deepEqual(categoryTotals(movements, '2026-09'), [
+    { category: 'Comida', expenses: 20000, income: 0 },
+    { category: 'Remuneración', expenses: 0, income: 800000 },
+  ])
+})
+
+test('omits unchecked categories from analysis totals', () => {
+  const movements = [
+    { date: '2026-09-02', category: 'Comida', amount: -15000 },
+    { date: '2026-09-03', category: 'Arriendo', amount: -400000 },
+  ]
+
+  assert.deepEqual(categoryTotals(movements, '2026-09', new Set(['Arriendo'])), [
+    { category: 'Comida', expenses: 15000, income: 0 },
+  ])
 })
 
 test('filters movement rows by each table column', () => {

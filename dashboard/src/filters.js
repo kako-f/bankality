@@ -1,5 +1,18 @@
 export const filterMovements = (movements, category) => [...movements].reverse().filter((movement) => !category || movement.category.trim() === category.trim())
 
+export function categoryTotals(movements, month = '', hiddenCategories = new Set()) {
+  const totals = new Map()
+  for (const { category, amount, date } of movements) {
+    if (!hiddenCategories.has(category) && (!month || date.startsWith(month))) {
+      const total = totals.get(category) || { category, expenses: 0, income: 0 }
+      if (amount < 0) total.expenses -= amount
+      else total.income += amount
+      totals.set(category, total)
+    }
+  }
+  return [...totals.values()]
+}
+
 export function filterMovementRows(movements, filters = {}) {
   const description = filters.description?.trim().toLocaleLowerCase();
   const amountMin = filters.amountMin === "" || filters.amountMin == null ? null : Number(filters.amountMin);
