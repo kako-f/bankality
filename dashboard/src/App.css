@@ -27,7 +27,7 @@
     font-weight: 600;
     letter-spacing: .08em;
     margin-top: .3rem;
-    text-transform: uppercase;
+    text-transform: none;
 }
 
 .side-nav {
@@ -87,7 +87,7 @@
     font-weight: 700;
     letter-spacing: .08em;
     margin: 0 0 .25rem;
-    text-transform: uppercase;
+    text-transform: none;
 }
 
 h1,
@@ -205,7 +205,7 @@ td {
 th {
     color: #9eb4c7;
     font-size: .78rem;
-    text-transform: uppercase;
+    text-transform: none;
 }
 
 .sort-button {
@@ -237,7 +237,7 @@ select {
     padding: .3rem;
 }
 
-input {
+input:not(.MuiInputBase-input) {
     background: #293a4d;
     border: 1px solid #62788c;
     border-radius: .25rem;
@@ -309,7 +309,7 @@ form {
     margin-top: 1.5rem;
 }
 
-form button {
+form button:not(.MuiButton-root) {
     background: #3c8dbc;
     border-radius: .35rem;
     color: #fff;
@@ -361,9 +361,7 @@ form button {
     margin-bottom: 1.5rem;
 }
 
-.subnav button,
-.category-form button,
-.category-row button {
+.subnav button {
     background: #3c8dbc;
     border-radius: .35rem;
     color: #fff;
@@ -376,16 +374,6 @@ form button {
 
 .category-form {
     align-items: center;
-}
-
-.category-form input,
-.category-row input {
-    background: #293a4d;
-    border: 1px solid #62788c;
-    border-radius: .25rem;
-    color: #dce4eb;
-    font: inherit;
-    padding: .3rem;
 }
 
 .category-row {
@@ -469,6 +457,51 @@ th, .sort-button { color: var(--muted); }
 .sort-button:hover { color: var(--text); }
 .credit { color: var(--accent); }
 .debit { color: var(--danger); }
-select, input, .category-form input, .category-row input { background: var(--input); border-color: var(--border); color: var(--text); }
-form button, .pagination button, .subnav button, .category-form button, .category-row button { background: var(--accent); }
+select, input:not(.MuiInputBase-input) { background: var(--input); border-color: var(--border); color: var(--text); }
+form button:not(.MuiButton-root), .pagination button, .subnav button { background: var(--accent); }
 .subnav button.active { background: var(--accent-strong); }
+
+
+.nav-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-group > button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.submenu-arrow {
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+.side-submenu {
+  display: flex;
+  flex-direction: column;
+  margin-left: 12px;
+  padding-left: 12px;
+  border-left: 2px solid #444;
+}
+
+.side-submenu button {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.side-submenu button:hover {
+  background: rgba(128, 128, 128, 0.1);
+}
+
+.side-submenu button.active {
+  font-weight: 600;
+  background: rgba(128, 128, 128, 0.15);
+}

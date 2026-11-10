@@ -5,7 +5,7 @@ class Category(models.Model):
     name = models.CharField(max_length=80, unique=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ["name"]
 
 
 class Movement(models.Model):
@@ -17,6 +17,4 @@ class Movement(models.Model):
     fingerprint = models.CharField(max_length=64, unique=True)
 
     class Meta:
-        ordering = ['date', 'id']
-
-# Create your models here.
+        ordering = ["date", "id"]

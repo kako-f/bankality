@@ -1,6 +1,14 @@
 from django.urls import path
 
-from .views import categories, category_detail, import_movements, list_movements, preview_imports, reset_data, update_category
+from .views import (
+    categories,
+    category_detail,
+    import_movements,
+    list_movements,
+    preview_imports,
+    reset_data,
+    update_category,
+)
 
 urlpatterns = [
     path('movements', list_movements),

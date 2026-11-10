@@ -1,4 +1,4 @@
-import re  # noqa
+import re
 import subprocess
 import tempfile
 from datetime import date, datetime
@@ -13,17 +13,14 @@ def category(description, amount):
     if "TRANSFER" in text or "TRASPASO" in text:
         return "Transferencias recibidas" if amount > 0 else "Transferencias enviadas"
     if amount > 0:
-        if "REMUNERACION" in text:
+        if any(term in text for term in ("REMUNERACIÓN","PAGO")):
             return "Remuneración"
         return "Otros abonos"
-    if any(term in text for term in ("JUMBO", "UNIMARC", "TOTTUS", "EXPRESS")):
+    if any(term in text for term in ("JUMBO", "UNIMARC", "TOTTUS", "EXPRESS","LIDER")):
         return "Supermercado"
     if any(term in text for term in ("CONCESION", "CHILEPASA", "PARK", "PLAZA MAULE")):
         return "Transporte"
-    if any(
-        term in text
-        for term in ("PAGO CUENTAS", "COMISION", "CARGO ", "I.MUNICIP", "I MUNI")
-    ):
+    if any(term in text for term in ("PAGO CUENTAS", "COMISION", "CARGO ")):
         return "Cuentas y cargos"
     if any(
         term in text
